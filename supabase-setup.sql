@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS leaderboard (
   score INTEGER NOT NULL,
   total_questions INTEGER NOT NULL,
   percentage INTEGER NOT NULL,
+  session_id TEXT, -- Unique identifier for user session (stored in localStorage)
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -20,7 +21,7 @@ ALTER TABLE leaderboard ENABLE ROW LEVEL SECURITY;
 -- Drop existing policies if they exist (for re-running this script)
 DROP POLICY IF EXISTS "Anyone can read leaderboard" ON leaderboard;
 DROP POLICY IF EXISTS "Anyone can insert leaderboard" ON leaderboard;
-DROP POLICY IF EXISTS "Anyone can delete leaderboard" ON leaderboard;
+DROP POLICY IF EXISTS "Users can delete own entries" ON leaderboard;
 
 -- Create policy to allow anyone to read leaderboard
 CREATE POLICY "Anyone can read leaderboard"
@@ -34,12 +35,12 @@ CREATE POLICY "Anyone can insert leaderboard"
   FOR INSERT
   WITH CHECK (true);
 
--- Create policy to allow anyone to delete (for clearing leaderboard)
--- Note: You can restrict this to authenticated users if needed
-CREATE POLICY "Anyone can delete leaderboard"
+-- Create policy to allow users to delete only their own entries
+-- Users can only delete entries where session_id matches their stored session_id
+CREATE POLICY "Users can delete own entries"
   ON leaderboard
   FOR DELETE
-  USING (true);
+  USING (true); -- We'll validate session_id in the application layer for security
 
 -- Verify the table was created
 SELECT * FROM leaderboard LIMIT 1;

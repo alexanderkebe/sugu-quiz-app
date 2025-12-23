@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { getTopScores, clearLeaderboard } from '@/utils/leaderboardUtils'
+import { getTopScores, deleteOwnEntry, getSessionId } from '@/utils/leaderboardUtils'
 import { LeaderboardEntry } from '@/types/leaderboard'
 
 interface LeaderboardScreenProps {
@@ -11,8 +11,9 @@ interface LeaderboardScreenProps {
 
 export default function LeaderboardScreen({ onBack }: LeaderboardScreenProps) {
   const [scores, setScores] = useState<LeaderboardEntry[]>([])
-  const [showClearConfirm, setShowClearConfirm] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
+  const currentSessionId = getSessionId()
 
   useEffect(() => {
     const loadScores = async () => {
@@ -24,13 +25,25 @@ export default function LeaderboardScreen({ onBack }: LeaderboardScreenProps) {
     loadScores()
   }, [])
 
-  const handleClear = async () => {
-    const success = await clearLeaderboard()
-    if (success) {
-      setScores([])
-      setShowClearConfirm(false)
-      setIsLoading(false)
+  const handleDelete = async (entryId: number) => {
+    if (!entryId || !confirm('Are you sure you want to delete your score?')) {
+      return
     }
+
+    setDeletingId(entryId)
+    const success = await deleteOwnEntry(entryId)
+    if (success) {
+      // Reload scores after deletion
+      const topScores = await getTopScores(20)
+      setScores(topScores)
+    } else {
+      alert('Failed to delete entry. It may not belong to you.')
+    }
+    setDeletingId(null)
+  }
+
+  const isOwnEntry = (entry: LeaderboardEntry): boolean => {
+    return entry.sessionId === currentSessionId && !!entry.id
   }
 
   const formatDate = (timestamp: number) => {
@@ -122,13 +135,27 @@ export default function LeaderboardScreen({ onBack }: LeaderboardScreenProps) {
                     </div>
                   </div>
                 </div>
-                <div className="text-right flex-shrink-0 ml-2">
-                  <div className="font-nokia font-bold text-gold text-base sm:text-lg md:text-xl">
-                    {entry.score}/{entry.totalQuestions}
+                <div className="flex items-center gap-3 sm:gap-4 flex-shrink-0">
+                  <div className="text-right">
+                    <div className="font-nokia font-bold text-gold text-base sm:text-lg md:text-xl">
+                      {entry.score}/{entry.totalQuestions}
+                    </div>
+                    <div className="font-nokia text-off-white/70 text-xs sm:text-sm">
+                      {entry.percentage}%
+                    </div>
                   </div>
-                  <div className="font-nokia text-off-white/70 text-xs sm:text-sm">
-                    {entry.percentage}%
-                  </div>
+                  {isOwnEntry(entry) && entry.id && (
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => handleDelete(entry.id!)}
+                      disabled={deletingId === entry.id}
+                      className="text-red-400 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed p-2"
+                      title="Delete your score"
+                    >
+                      {deletingId === entry.id ? '⏳' : '🗑️'}
+                    </motion.button>
+                  )}
                 </div>
               </motion.div>
             ))}
@@ -155,50 +182,6 @@ export default function LeaderboardScreen({ onBack }: LeaderboardScreenProps) {
           >
             Back
           </motion.button>
-
-          {scores.length > 0 && (
-            <>
-              {!showClearConfirm ? (
-                <motion.button
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.5 }}
-                  whileHover={{ y: -2, scale: 1.02 }}
-                  whileTap={{ y: 0, scale: 0.98 }}
-                  onClick={() => setShowClearConfirm(true)}
-                  className="flex-1 font-nokia font-bold text-red-300 text-base sm:text-lg md:text-xl py-3 sm:py-4 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 min-h-[44px] sm:min-h-[52px]"
-                  style={{
-                    background: 'rgba(255, 0, 0, 0.15)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 0, 0, 0.3)',
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
-                  }}
-                >
-                  Clear
-                </motion.button>
-              ) : (
-                <div className="flex-1 flex gap-2">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleClear}
-                    className="flex-1 font-nokia font-bold text-white text-sm sm:text-base py-3 rounded-xl cursor-pointer bg-red-500"
-                  >
-                    Confirm
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setShowClearConfirm(false)}
-                    className="flex-1 font-nokia font-bold text-off-white text-sm sm:text-base py-3 rounded-xl cursor-pointer bg-white/10"
-                  >
-                    Cancel
-                  </motion.button>
-                </div>
-              )}
-            </>
-          )}
         </div>
       </motion.div>
     </div>

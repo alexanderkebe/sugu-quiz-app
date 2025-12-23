@@ -2,6 +2,36 @@ import { LeaderboardEntry } from '@/types/leaderboard'
 import { supabase } from '@/lib/supabase'
 
 const MAX_ENTRIES = 50 // Store top 50 scores
+const SESSION_ID_KEY = 'sugu_quiz_session_id'
+
+/**
+ * Get or create a unique session ID for the current user
+ * This is stored in localStorage to track which entries belong to this user
+ */
+export function getOrCreateSessionId(): string {
+  if (typeof window === 'undefined') {
+    // Server-side: generate a temporary ID
+    return `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  }
+
+  let sessionId = localStorage.getItem(SESSION_ID_KEY)
+  
+  if (!sessionId) {
+    // Generate a unique session ID
+    sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    localStorage.setItem(SESSION_ID_KEY, sessionId)
+  }
+  
+  return sessionId
+}
+
+/**
+ * Get the current user's session ID
+ */
+export function getSessionId(): string | null {
+  if (typeof window === 'undefined') return null
+  return localStorage.getItem(SESSION_ID_KEY)
+}
 
 /**
  * Get all leaderboard entries from Supabase
@@ -32,11 +62,13 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
     }
 
     return (data || []).map((entry) => ({
+      id: entry.id,
       name: entry.name,
       score: entry.score,
       totalQuestions: entry.total_questions,
       percentage: entry.percentage,
       timestamp: new Date(entry.created_at).getTime(),
+      sessionId: entry.session_id || undefined,
     }))
   } catch (error) {
     console.error('Error reading leaderboard:', error)
@@ -63,11 +95,15 @@ export async function addToLeaderboard(
       return false
     }
 
+    // Get or create session ID for this user
+    const sessionId = getOrCreateSessionId()
+
     const { data, error } = await supabase.from('leaderboard').insert({
       name: entry.name,
       score: entry.score,
       total_questions: entry.totalQuestions,
       percentage: entry.percentage,
+      session_id: sessionId,
     }).select()
 
     if (error) {
@@ -131,11 +167,13 @@ export async function getTopScores(limit: number = 10): Promise<LeaderboardEntry
     }
 
     return (data || []).map((entry) => ({
+      id: entry.id,
       name: entry.name,
       score: entry.score,
       totalQuestions: entry.total_questions,
       percentage: entry.percentage,
       timestamp: new Date(entry.created_at).getTime(),
+      sessionId: entry.session_id || undefined,
     }))
   } catch (error) {
     console.error('Error fetching top scores:', error)
@@ -144,20 +182,57 @@ export async function getTopScores(limit: number = 10): Promise<LeaderboardEntry
 }
 
 /**
- * Clear all leaderboard data (admin function - optional)
+ * Delete a specific leaderboard entry (only if it belongs to the current user)
  */
-export async function clearLeaderboard(): Promise<boolean> {
+export async function deleteOwnEntry(entryId: number): Promise<boolean> {
   try {
-    const { error } = await supabase.from('leaderboard').delete().neq('id', 0) // Delete all
+    const sessionId = getSessionId()
+    if (!sessionId) {
+      console.warn('No session ID found. Cannot delete entry.')
+      return false
+    }
+
+    // Check if Supabase is properly configured
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    const isValidKey = anonKey && (anonKey.length > 20 || anonKey.startsWith('sb_publishable_'))
+    if (!isValidKey) {
+      console.warn('❌ Supabase not configured. Cannot delete entry.')
+      return false
+    }
+
+    // First, verify the entry belongs to this user
+    const { data: entry, error: fetchError } = await supabase
+      .from('leaderboard')
+      .select('session_id')
+      .eq('id', entryId)
+      .single()
+
+    if (fetchError || !entry) {
+      console.error('Error fetching entry:', fetchError)
+      return false
+    }
+
+    // Verify session_id matches
+    if (entry.session_id !== sessionId) {
+      console.warn('Cannot delete: Entry does not belong to current user')
+      return false
+    }
+
+    // Delete the entry
+    const { error } = await supabase
+      .from('leaderboard')
+      .delete()
+      .eq('id', entryId)
+      .eq('session_id', sessionId) // Double-check with session_id
 
     if (error) {
-      console.error('Error clearing leaderboard:', error)
+      console.error('Error deleting entry:', error)
       return false
     }
 
     return true
   } catch (error) {
-    console.error('Error clearing leaderboard:', error)
+    console.error('Error deleting entry:', error)
     return false
   }
 }

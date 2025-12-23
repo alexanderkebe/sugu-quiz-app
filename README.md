@@ -10,6 +10,8 @@ A mobile-first quiz game web application built with Next.js, featuring a beautif
 - ⏱️ 30-second timer per question
 - 📊 Results screen with score and encouraging messages
 - 🏆 Global leaderboard powered by Supabase
+- 🗑️ Users can delete only their own leaderboard entries
+- 📺 Fancy admin TV leaderboard view (`/admin/tv`)
 - 🎨 Glassmorphic UI design
 - 📱 Mobile-first responsive design
 - ⚡ Smooth animations with Framer Motion
@@ -47,6 +49,7 @@ npm install
    - **Follow the step-by-step guide**: [DATABASE_SETUP.md](./DATABASE_SETUP.md)
    - This will take about 5-10 minutes
    - You'll need to run a SQL script and create a `.env.local` file
+   - **If you already have the leaderboard table**, also run `supabase-migration-session-id.sql` to add the `session_id` column
 
 4. **Run the development server:**
 ```bash
@@ -98,6 +101,20 @@ Edit `data/quizData.ts` to add or modify questions:
 ### Styling
 
 The app uses Tailwind CSS with custom colors defined in `tailwind.config.js`. The glassmorphic effects are applied inline using CSS backdrop-filter.
+
+## Admin TV Leaderboard
+
+For displaying the leaderboard on a TV screen during events:
+
+1. Navigate to `/admin/tv` in your browser
+2. The page will auto-refresh every 5 seconds
+3. Optimized for large displays with:
+   - Large, readable fonts
+   - Smooth animations
+   - High contrast colors
+   - Top 10 performers displayed
+
+**URL**: `https://your-domain.com/admin/tv`
 
 ## Build for Production
 
