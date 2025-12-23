@@ -106,6 +106,22 @@ npm run build
 npm start
 ```
 
+## Deployment
+
+### Deploy to Vercel
+
+See [VERCEL_DEPLOY.md](./VERCEL_DEPLOY.md) for step-by-step deployment instructions.
+
+**Quick steps:**
+1. Push code to GitHub (already done ✅)
+2. Import project in Vercel
+3. Add environment variables:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+4. Deploy!
+
+**Important:** Make sure to add your Supabase environment variables in Vercel's project settings, or the leaderboard won't work.
+
 ## License
 
 Private project for Subae Gubae initiative.
