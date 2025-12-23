@@ -9,8 +9,12 @@ const MAX_ENTRIES = 50 // Store top 50 scores
 export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
   try {
     // Check if Supabase is properly configured
-    if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.warn('Supabase not configured. Leaderboard disabled.')
+    // Supports both old JWT format (eyJ...) and new format (sb_publishable_...)
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    const isValidKey = anonKey && (anonKey.length > 20 || anonKey.startsWith('sb_publishable_'))
+    if (!isValidKey) {
+      console.warn('❌ Supabase not configured. Leaderboard disabled.')
+      console.warn('💡 Please add NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env.local file')
       return []
     }
 
@@ -105,8 +109,11 @@ export async function addToLeaderboard(
 export async function getTopScores(limit: number = 10): Promise<LeaderboardEntry[]> {
   try {
     // Check if Supabase is properly configured
-    if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      console.warn('Supabase not configured. Leaderboard disabled.')
+    // Supports both old JWT format (eyJ...) and new format (sb_publishable_...)
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    const isValidKey = anonKey && (anonKey.length > 20 || anonKey.startsWith('sb_publishable_'))
+    if (!isValidKey) {
+      console.warn('❌ Supabase not configured. Leaderboard disabled.')
       return []
     }
 

@@ -49,7 +49,10 @@ export default function ResultsScreen({
         setShowNameInput(false)
       } else {
         // Show error message if save failed
-        const errorMsg = !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        // Check if Supabase is properly configured (supports both old and new key formats)
+        const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+        const isValidKey = anonKey && (anonKey.length > 20 || anonKey.startsWith('sb_publishable_'))
+        const errorMsg = !isValidKey
           ? 'Supabase not configured. Please add your API key to .env.local file. See GET_API_KEY.md for instructions.'
           : 'Failed to save score. Check browser console (F12) for details. Make sure the database table exists and you ran the SQL script.'
         alert(errorMsg)
