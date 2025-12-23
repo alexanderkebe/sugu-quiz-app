@@ -19,8 +19,8 @@ export default function AdminTVLeaderboard() {
 
     loadScores()
 
-    // Auto-refresh every 5 seconds
-    const interval = setInterval(loadScores, 5000)
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(loadScores, 30000)
 
     return () => clearInterval(interval)
   }, [])
@@ -232,7 +232,7 @@ export default function AdminTVLeaderboard() {
         className="text-center mt-8 sm:mt-12 lg:mt-16"
       >
         <p className="font-nokia text-off-white/60 text-sm sm:text-base md:text-lg">
-          Auto-refreshing every 5 seconds
+          Auto-refreshing every 30 seconds
         </p>
       </motion.div>
     </div>

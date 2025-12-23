@@ -115,13 +115,28 @@ export async function addToLeaderboard(
         code: error.code,
       })
       
+      // Log the full error object for debugging
+      console.error('Full error object:', JSON.stringify(error, null, 2))
+      
       // Provide helpful error messages
       if (error.code === 'PGRST116' || error.message?.includes('relation') || error.message?.includes('does not exist')) {
         console.error('💡 The leaderboard table does not exist. Please run the SQL script from supabase-setup.sql in your Supabase dashboard.')
+      } else if (error.message?.includes('session_id') || error.message?.includes('column') || error.code === '42703' || error.details?.includes('session_id')) {
+        console.error('💡 The session_id column is missing. Please run the migration script: supabase-migration-session-id.sql')
+        console.error('💡 Go to: https://supabase.com/dashboard/project/pukgraslmfvcacmtlftx/sql/new')
+        console.error('💡 Copy and paste the contents of supabase-migration-session-id.sql')
       } else if (error.code === '42501' || error.message?.includes('permission denied') || error.message?.includes('policy')) {
         console.error('💡 Row Level Security policy issue. Please check that the policies were created correctly.')
       } else if (error.message?.includes('JWT') || error.message?.includes('invalid')) {
         console.error('💡 Invalid API key. Please check your NEXT_PUBLIC_SUPABASE_ANON_KEY in .env.local')
+      } else if (error.code === 'PGRST301' || error.message?.includes('JSON object requested, multiple (or no) rows returned')) {
+        console.error('💡 Database query issue. The table structure might be incorrect.')
+      } else {
+        console.error('💡 Unknown error. Check the error details above.')
+        console.error('💡 Common fixes:')
+        console.error('   1. Run supabase-migration-session-id.sql if session_id column is missing')
+        console.error('   2. Run supabase-setup.sql if the table doesn\'t exist')
+        console.error('   3. Check your Supabase table structure matches the expected schema')
       }
       
       return false
