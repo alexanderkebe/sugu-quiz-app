@@ -64,6 +64,7 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
     return (data || []).map((entry) => ({
       id: entry.id,
       name: entry.name,
+      phoneNumber: entry.phone_number || undefined,
       score: entry.score,
       totalQuestions: entry.total_questions,
       percentage: entry.percentage,
@@ -100,6 +101,7 @@ export async function addToLeaderboard(
 
     const { data, error } = await supabase.from('leaderboard').insert({
       name: entry.name,
+      phone_number: entry.phoneNumber || null,
       score: entry.score,
       total_questions: entry.totalQuestions,
       percentage: entry.percentage,
@@ -184,6 +186,7 @@ export async function getTopScores(limit: number = 10): Promise<LeaderboardEntry
     return (data || []).map((entry) => ({
       id: entry.id,
       name: entry.name,
+      phoneNumber: entry.phone_number || undefined,
       score: entry.score,
       totalQuestions: entry.total_questions,
       percentage: entry.percentage,
@@ -239,6 +242,37 @@ export async function deleteOwnEntry(entryId: number): Promise<boolean> {
       .delete()
       .eq('id', entryId)
       .eq('session_id', sessionId) // Double-check with session_id
+
+    if (error) {
+      console.error('Error deleting entry:', error)
+      return false
+    }
+
+    return true
+  } catch (error) {
+    console.error('Error deleting entry:', error)
+    return false
+  }
+}
+
+/**
+ * Delete any leaderboard entry (admin function - no session_id check)
+ */
+export async function deleteEntry(entryId: number): Promise<boolean> {
+  try {
+    // Check if Supabase is properly configured
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    const isValidKey = anonKey && (anonKey.length > 20 || anonKey.startsWith('sb_publishable_'))
+    if (!isValidKey) {
+      console.warn('❌ Supabase not configured. Cannot delete entry.')
+      return false
+    }
+
+    // Delete the entry (admin can delete any entry)
+    const { error } = await supabase
+      .from('leaderboard')
+      .delete()
+      .eq('id', entryId)
 
     if (error) {
       console.error('Error deleting entry:', error)

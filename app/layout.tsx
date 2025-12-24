@@ -22,7 +22,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body style={{ margin: 0, padding: 0, minHeight: '100vh', backgroundColor: '#EEC130' }}>
+        {children}
+      </body>
     </html>
   )
 }

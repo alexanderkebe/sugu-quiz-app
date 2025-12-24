@@ -5,6 +5,7 @@
 CREATE TABLE IF NOT EXISTS leaderboard (
   id BIGSERIAL PRIMARY KEY,
   name TEXT NOT NULL,
+  phone_number TEXT, -- Phone number for contacting winners
   score INTEGER NOT NULL,
   total_questions INTEGER NOT NULL,
   percentage INTEGER NOT NULL,

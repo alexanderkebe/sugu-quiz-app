@@ -10,7 +10,9 @@ A mobile-first quiz game web application built with Next.js, featuring a beautif
 - ⏱️ 30-second timer per question
 - 📊 Results screen with score and encouraging messages
 - 🏆 Global leaderboard powered by Supabase
+- 📱 Phone number collection for contacting winners
 - 🗑️ Users can delete only their own leaderboard entries
+- 🛡️ Admin panel to view and manage all entries (`/admin/panel`)
 - 📺 Fancy admin TV leaderboard view (`/admin/tv`)
 - 🎨 Glassmorphic UI design
 - 📱 Mobile-first responsive design
@@ -49,7 +51,9 @@ npm install
    - **Follow the step-by-step guide**: [DATABASE_SETUP.md](./DATABASE_SETUP.md)
    - This will take about 5-10 minutes
    - You'll need to run a SQL script and create a `.env.local` file
-   - **If you already have the leaderboard table**, also run `supabase-migration-session-id.sql` to add the `session_id` column
+   - **If you already have the leaderboard table**, run these migration scripts:
+     - `supabase-migration-session-id.sql` - Adds `session_id` column
+     - `supabase-migration-phone-number.sql` - Adds `phone_number` column
 
 4. **Run the development server:**
 ```bash
@@ -102,12 +106,25 @@ Edit `data/quizData.ts` to add or modify questions:
 
 The app uses Tailwind CSS with custom colors defined in `tailwind.config.js`. The glassmorphic effects are applied inline using CSS backdrop-filter.
 
-## Admin TV Leaderboard
+## Admin Features
+
+### Admin Panel (`/admin/panel`)
+
+Manage all leaderboard entries:
+- View all entries with search and sort functionality
+- Delete any entry (admin only)
+- See phone numbers for contacting winners
+- View statistics (total entries, entries with phone numbers)
+- Real-time refresh
+
+**URL**: `https://your-domain.com/admin/panel`
+
+### Admin TV Leaderboard (`/admin/tv`)
 
 For displaying the leaderboard on a TV screen during events:
 
 1. Navigate to `/admin/tv` in your browser
-2. The page will auto-refresh every 5 seconds
+2. The page will auto-refresh every 30 seconds
 3. Optimized for large displays with:
    - Large, readable fonts
    - Smooth animations

@@ -19,6 +19,7 @@ export default function ResultsScreen({
   onShowLeaderboard,
 }: ResultsScreenProps) {
   const [playerName, setPlayerName] = useState('')
+  const [phoneNumber, setPhoneNumber] = useState('')
   const [nameSubmitted, setNameSubmitted] = useState(false)
   const [showNameInput, setShowNameInput] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -36,9 +37,17 @@ export default function ResultsScreen({
 
   const handleNameSubmit = async () => {
     if (playerName.trim() && !isSubmitting) {
+      // Validate phone number format (basic validation)
+      const phoneRegex = /^[\d\s\-\+\(\)]+$/
+      if (phoneNumber.trim() && !phoneRegex.test(phoneNumber.trim())) {
+        alert('Please enter a valid phone number')
+        return
+      }
+
       setIsSubmitting(true)
       const success = await addToLeaderboard({
         name: playerName.trim(),
+        phoneNumber: phoneNumber.trim() || undefined,
         score,
         totalQuestions,
         percentage,
@@ -148,39 +157,51 @@ export default function ResultsScreen({
               className="mb-4 sm:mb-6"
             >
               <label className="block font-nokia text-off-white text-sm sm:text-base mb-2">
-                Enter your name for the leaderboard:
+                Enter your details for the leaderboard:
               </label>
-              <div className="flex gap-2">
+              <div className="space-y-3 mb-3">
                 <input
                   type="text"
                   value={playerName}
                   onChange={(e) => setPlayerName(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleNameSubmit()}
                   maxLength={20}
-                  placeholder="Your name"
-                  className="flex-1 font-nokia text-base sm:text-lg px-4 py-2 sm:py-3 rounded-xl bg-white/10 border border-white/20 text-off-white placeholder-off-white/50 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/50"
+                  placeholder="Your name *"
+                  className="w-full font-nokia text-base sm:text-lg px-4 py-2 sm:py-3 rounded-xl bg-white/10 border border-white/20 text-off-white placeholder-off-white/50 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/50"
                   style={{
                     backdropFilter: 'blur(10px)',
                     WebkitBackdropFilter: 'blur(10px)',
                   }}
                 />
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={handleNameSubmit}
-                  disabled={!playerName.trim() || isSubmitting}
-                  className="font-nokia font-bold text-gold text-base sm:text-lg px-4 sm:px-6 py-2 sm:py-3 rounded-xl cursor-pointer transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+                <input
+                  type="tel"
+                  value={phoneNumber}
+                  onChange={(e) => setPhoneNumber(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleNameSubmit()}
+                  placeholder="Phone number (to contact you if you win)"
+                  className="w-full font-nokia text-base sm:text-lg px-4 py-2 sm:py-3 rounded-xl bg-white/10 border border-white/20 text-off-white placeholder-off-white/50 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/50"
                   style={{
-                    background: playerName.trim() ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                    backdropFilter: 'blur(20px)',
-                    WebkitBackdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
-                    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+                    backdropFilter: 'blur(10px)',
+                    WebkitBackdropFilter: 'blur(10px)',
                   }}
-                >
-                  {isSubmitting ? 'Saving...' : 'Submit'}
-                </motion.button>
+                />
               </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleNameSubmit}
+                disabled={!playerName.trim() || isSubmitting}
+                className="w-full font-nokia font-bold text-gold text-base sm:text-lg px-4 sm:px-6 py-2 sm:py-3 rounded-xl cursor-pointer transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
+                style={{
+                  background: playerName.trim() ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                  backdropFilter: 'blur(20px)',
+                  WebkitBackdropFilter: 'blur(20px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+                }}
+              >
+                {isSubmitting ? 'Saving...' : 'Submit'}
+              </motion.button>
               {nameSubmitted && (
                 <motion.p
                   initial={{ opacity: 0 }}
