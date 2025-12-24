@@ -1,9 +1,10 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Question } from '@/types/quiz'
 import { addToLeaderboard } from '@/utils/leaderboardUtils'
+import { soundManager } from '@/utils/soundEffects'
 
 interface ResultsScreenProps {
   answers: number[]
@@ -34,6 +35,20 @@ export default function ResultsScreen({
 
   const totalQuestions = questions.length
   const percentage = Math.round((score / totalQuestions) * 100)
+
+  // Play result sound based on performance
+  useEffect(() => {
+    // Play sound when results screen appears
+    if (percentage >= 85) {
+      soundManager.playExcellentResult()
+    } else if (percentage >= 70) {
+      soundManager.playGoodResult()
+    } else if (percentage >= 50) {
+      soundManager.playOkayResult()
+    } else {
+      soundManager.playPoorResult()
+    }
+  }, [percentage])
 
   const handleNameSubmit = async () => {
     if (playerName.trim() && !isSubmitting) {

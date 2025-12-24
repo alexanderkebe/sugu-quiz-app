@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Question } from '@/types/quiz'
+import { soundManager } from '@/utils/soundEffects'
 
 interface QuizScreenProps {
   question: Question
@@ -32,13 +33,25 @@ export default function QuizScreen({
     setSelectedAnswer(null)
     setIsLocked(false)
 
+    // Play sound when new question appears
+    soundManager.playNewQuestion()
+
     // Start countdown
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
-        if (prev <= 1) {
-          return 0
+        const newTime = prev <= 1 ? 0 : prev - 1
+        
+        // Play clock tick every second
+        if (newTime > 0) {
+          soundManager.playClockTick()
         }
-        return prev - 1
+        
+        // Play warning sound at key intervals: 10, 5, 3, 2, 1 (in addition to tick)
+        if (newTime > 0 && newTime <= 10 && [10, 5, 3, 2, 1].includes(newTime)) {
+          soundManager.playWarning()
+        }
+        
+        return newTime
       })
     }, 1000)
 
@@ -54,6 +67,8 @@ export default function QuizScreen({
     if (timeLeft === 0 && !isLocked) {
       setIsTimeout(true)
       setIsLocked(true)
+      // Play timeout sound
+      soundManager.playTimeout()
       // Mark as wrong answer (null or -1 to indicate timeout)
       // We'll show the correct answer but mark user as having gotten it wrong
       setTimeout(() => {
@@ -65,6 +80,9 @@ export default function QuizScreen({
   const handleAnswerClick = (index: number) => {
     if (isLocked) return
 
+    // Play click sound
+    soundManager.playClick()
+
     // Clear timer
     if (timerRef.current) {
       clearInterval(timerRef.current)
@@ -72,6 +90,16 @@ export default function QuizScreen({
 
     setSelectedAnswer(index)
     setIsLocked(true)
+
+    // Play correct/wrong sound after a short delay to show result
+    setTimeout(() => {
+      if (index === question.correctAnswer) {
+        soundManager.playCorrect()
+      } else {
+        soundManager.playWrong()
+      }
+    }, 100)
+
     onAnswerSelect(index)
   }
 
@@ -171,7 +199,7 @@ export default function QuizScreen({
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
             }}
           >
-            <h2 className="font-nokia font-bold text-off-white text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed">
+            <h2 className="font-nokia font-bold text-gold text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed">
               {question.text}
             </h2>
           </div>
