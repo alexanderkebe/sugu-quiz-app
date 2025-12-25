@@ -131,7 +131,16 @@ export default function AdminTVLeaderboard() {
           </p>
         </motion.div>
       ) : (
-        <div className="flex-1 max-w-6xl mx-auto w-full overflow-y-auto overflow-x-hidden pr-2 pb-4" style={{ scrollbarWidth: 'thin' }}>
+        <div 
+          className="flex-1 max-w-6xl mx-auto w-full overflow-y-auto overflow-x-hidden pr-2 pb-4 leaderboard-scroll" 
+          style={{ 
+            scrollbarWidth: 'thin',
+            scrollbarColor: 'rgba(238, 193, 48, 0.5) transparent',
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain',
+            minHeight: 0, // Important for flex children to allow scrolling
+          }}
+        >
           <div className="space-y-2 sm:space-y-3 lg:space-y-4 py-2">
             <AnimatePresence mode="popLayout">
               {(() => {
