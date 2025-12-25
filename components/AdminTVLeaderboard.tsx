@@ -12,7 +12,7 @@ export default function AdminTVLeaderboard() {
   useEffect(() => {
     const loadScores = async () => {
       setIsLoading(true)
-      const topScores = await getTopScores(10) // Show top 10 without scrolling
+      const topScores = await getTopScores(50) // Fetch top 50, but display fits 10+ on screen
       setScores(topScores)
       setIsLoading(false)
     }
@@ -99,7 +99,7 @@ export default function AdminTVLeaderboard() {
           </p>
         </motion.div>
       ) : (
-        <div className="flex-1 max-w-6xl mx-auto w-full grid grid-cols-1 gap-2 sm:gap-3 lg:gap-4 overflow-hidden">
+        <div className="flex-1 max-w-6xl mx-auto w-full space-y-2 sm:space-y-3 lg:space-y-4 overflow-y-auto pr-2">
           <AnimatePresence>
             {(() => {
               // Calculate ranks for all entries
