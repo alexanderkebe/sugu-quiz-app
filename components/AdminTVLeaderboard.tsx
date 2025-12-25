@@ -12,7 +12,7 @@ export default function AdminTVLeaderboard() {
   useEffect(() => {
     const loadScores = async () => {
       setIsLoading(true)
-      const topScores = await getTopScores(50) // Get top 50 for scrollable display
+      const topScores = await getTopScores(10) // Show top 10 without scrolling
       setScores(topScores)
       setIsLoading(false)
     }
@@ -34,16 +34,16 @@ export default function AdminTVLeaderboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-burgundy via-[#7a0f1f] to-burgundy p-8 sm:p-12 lg:p-16">
+    <div className="h-screen bg-gradient-to-br from-burgundy via-[#7a0f1f] to-burgundy p-4 sm:p-6 lg:p-8 flex flex-col overflow-hidden">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -50 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="text-center mb-8 sm:mb-12 lg:mb-16"
+        className="text-center mb-4 sm:mb-6 lg:mb-8 flex-shrink-0"
       >
         <motion.h1
-          className="font-nokia font-bold text-gold text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl mb-4"
+          className="font-nokia font-bold text-gold text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl mb-2"
           style={{
             textShadow: '0 4px 20px rgba(238, 193, 48, 0.5), 0 0 40px rgba(238, 193, 48, 0.3)',
           }}
@@ -66,7 +66,7 @@ export default function AdminTVLeaderboard() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 0.8 }}
-          className="font-nokia text-off-white text-lg sm:text-xl md:text-2xl lg:text-3xl"
+          className="font-nokia text-off-white text-sm sm:text-base md:text-lg lg:text-xl"
         >
           Top Performers
         </motion.p>
@@ -99,7 +99,7 @@ export default function AdminTVLeaderboard() {
           </p>
         </motion.div>
       ) : (
-        <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8 max-h-[70vh] overflow-y-auto pr-2">
+        <div className="flex-1 max-w-6xl mx-auto w-full grid grid-cols-1 gap-2 sm:gap-3 lg:gap-4 overflow-hidden">
           <AnimatePresence>
             {(() => {
               // Calculate ranks for all entries
@@ -138,10 +138,10 @@ export default function AdminTVLeaderboard() {
                     stiffness: 100,
                   }}
                   whileHover={{ scale: 1.02, x: 10 }}
-                  className={`relative rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-10 ${
+                  className={`relative rounded-xl sm:rounded-2xl p-3 sm:p-4 lg:p-5 flex-shrink-0 ${
                     isTopThree
-                      ? 'bg-gradient-to-r from-gold/30 via-gold/20 to-gold/10 border-4 border-gold'
-                      : 'bg-white/10 border-2 border-white/20'
+                      ? 'bg-gradient-to-r from-gold/30 via-gold/20 to-gold/10 border-2 sm:border-3 border-gold'
+                      : 'bg-white/10 border border-white/20'
                   }`}
                   style={{
                     backdropFilter: 'blur(20px)',
@@ -152,9 +152,9 @@ export default function AdminTVLeaderboard() {
                   }}
                 >
                   {/* Rank Badge */}
-                  <div className="flex items-center gap-4 sm:gap-6 lg:gap-8">
+                  <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
                     <motion.div
-                      className={`font-nokia font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl flex-shrink-0 ${
+                      className={`font-nokia font-bold text-2xl sm:text-3xl md:text-4xl lg:text-5xl flex-shrink-0 ${
                         isTopThree ? 'text-gold' : 'text-off-white/60'
                       }`}
                       animate={
@@ -177,7 +177,7 @@ export default function AdminTVLeaderboard() {
                     {/* Player Info */}
                     <div className="flex-1 min-w-0">
                       <motion.div
-                        className={`font-nokia font-bold text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl mb-2 ${
+                        className={`font-nokia font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl mb-1 ${
                           isTopThree ? 'text-gold' : 'text-off-white'
                         }`}
                         style={{
@@ -186,7 +186,7 @@ export default function AdminTVLeaderboard() {
                       >
                         {entry.name || 'Anonymous'}
                       </motion.div>
-                      <div className="font-nokia text-off-white/70 text-base sm:text-lg md:text-xl lg:text-2xl">
+                      <div className="font-nokia text-off-white/70 text-xs sm:text-sm md:text-base lg:text-lg">
                         {formatDate(entry.timestamp)}
                       </div>
                     </div>
@@ -194,7 +194,7 @@ export default function AdminTVLeaderboard() {
                     {/* Score */}
                     <div className="text-right flex-shrink-0">
                       <motion.div
-                        className={`font-nokia font-bold text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl mb-2 ${
+                        className={`font-nokia font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl mb-1 ${
                           isTopThree ? 'text-gold' : 'text-gold/90'
                         }`}
                         style={{
@@ -215,7 +215,7 @@ export default function AdminTVLeaderboard() {
                       >
                         {entry.score}/{entry.totalQuestions}
                       </motion.div>
-                      <div className="font-nokia text-off-white/80 text-xl sm:text-2xl md:text-3xl lg:text-4xl">
+                      <div className="font-nokia text-off-white/80 text-sm sm:text-base md:text-lg lg:text-xl">
                         {entry.percentage}%
                       </div>
                     </div>
@@ -224,7 +224,7 @@ export default function AdminTVLeaderboard() {
                   {/* Progress Bar for Top 3 */}
                   {isTopThree && (
                     <motion.div
-                      className="mt-4 sm:mt-6 h-2 sm:h-3 bg-white/10 rounded-full overflow-hidden"
+                      className="mt-2 sm:mt-3 h-1.5 sm:h-2 bg-white/10 rounded-full overflow-hidden"
                       initial={{ width: 0 }}
                       animate={{ width: '100%' }}
                       transition={{ delay: index * 0.1 + 0.5, duration: 1 }}
@@ -250,9 +250,9 @@ export default function AdminTVLeaderboard() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1, duration: 0.8 }}
-        className="text-center mt-8 sm:mt-12 lg:mt-16"
+        className="text-center mt-2 sm:mt-4 flex-shrink-0"
       >
-        <p className="font-nokia text-off-white/60 text-sm sm:text-base md:text-lg">
+        <p className="font-nokia text-off-white/60 text-xs sm:text-sm md:text-base">
           Auto-refreshing every 10 seconds
         </p>
       </motion.div>
