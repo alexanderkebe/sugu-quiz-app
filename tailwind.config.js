@@ -16,6 +16,15 @@ module.exports = {
       fontFamily: {
         nokia: ['var(--font-nokia)', 'sans-serif'],
       },
+      screens: {
+        '3xl': '1920px', // Large TVs and monitors
+        '4xl': '2560px', // 4K displays
+      },
+      fontSize: {
+        '7xl': '4.5rem',   // 72px
+        '8xl': '6rem',     // 96px
+        '9xl': '8rem',     // 128px
+      },
     },
   },
   plugins: [],
