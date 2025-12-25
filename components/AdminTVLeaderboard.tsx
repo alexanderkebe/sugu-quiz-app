@@ -12,15 +12,15 @@ export default function AdminTVLeaderboard() {
   useEffect(() => {
     const loadScores = async () => {
       setIsLoading(true)
-      const topScores = await getTopScores(10) // Top 10 for TV display
+      const topScores = await getTopScores(50) // Get top 50 for scrollable display
       setScores(topScores)
       setIsLoading(false)
     }
 
     loadScores()
 
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(loadScores, 30000)
+    // Auto-refresh every 10 seconds
+    const interval = setInterval(loadScores, 10000)
 
     return () => clearInterval(interval)
   }, [])
@@ -99,11 +99,31 @@ export default function AdminTVLeaderboard() {
           </p>
         </motion.div>
       ) : (
-        <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8">
+        <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 lg:space-y-8 max-h-[70vh] overflow-y-auto pr-2">
           <AnimatePresence>
-            {scores.map((entry, index) => {
-              const isTopThree = index < 3
-              const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'
+            {(() => {
+              // Calculate ranks for all entries
+              const ranks: number[] = []
+              
+              scores.forEach((entry, index) => {
+                if (index === 0) {
+                  ranks.push(1)
+                } else {
+                  const prevEntry = scores[index - 1]
+                  // If score and percentage are the same, use same rank
+                  if (prevEntry.score === entry.score && prevEntry.percentage === entry.percentage) {
+                    ranks.push(ranks[index - 1])
+                  } else {
+                    // Different score/percentage = new rank
+                    ranks.push(index + 1)
+                  }
+                }
+              })
+
+              return scores.map((entry, index) => {
+                const rank = ranks[index]
+                const isTopThree = rank <= 3
+                const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : '🥉'
 
               return (
                 <motion.div
@@ -151,7 +171,7 @@ export default function AdminTVLeaderboard() {
                         ease: 'easeInOut',
                       }}
                     >
-                      {isTopThree ? medal : `#${index + 1}`}
+                      {isTopThree ? medal : `#${rank}`}
                     </motion.div>
 
                     {/* Player Info */}
@@ -219,7 +239,8 @@ export default function AdminTVLeaderboard() {
                   )}
                 </motion.div>
               )
-            })}
+            })
+            })()}
           </AnimatePresence>
         </div>
       )}
@@ -232,7 +253,7 @@ export default function AdminTVLeaderboard() {
         className="text-center mt-8 sm:mt-12 lg:mt-16"
       >
         <p className="font-nokia text-off-white/60 text-sm sm:text-base md:text-lg">
-          Auto-refreshing every 30 seconds
+          Auto-refreshing every 10 seconds
         </p>
       </motion.div>
     </div>

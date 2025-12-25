@@ -104,16 +104,41 @@ export default function LeaderboardScreen({ onBack }: LeaderboardScreenProps) {
           </motion.div>
         ) : (
           <div className="space-y-2 sm:space-y-3 mb-6 sm:mb-8 max-h-[60vh] overflow-y-auto">
-            {scores.map((entry, index) => (
-              <motion.div
+            {(() => {
+              // Calculate ranks for all entries
+              const ranks: number[] = []
+              let currentRank = 1
+              
+              scores.forEach((entry, index) => {
+                if (index === 0) {
+                  ranks.push(1)
+                } else {
+                  const prevEntry = scores[index - 1]
+                  // If score and percentage are the same, use same rank
+                  if (prevEntry.score === entry.score && prevEntry.percentage === entry.percentage) {
+                    ranks.push(ranks[index - 1])
+                  } else {
+                    // Different score/percentage = new rank
+                    currentRank = index + 1
+                    ranks.push(currentRank)
+                  }
+                }
+              })
+
+              return scores.map((entry, index) => {
+                const rank = ranks[index]
+                const isTopThree = rank <= 3
+              
+                return (
+                <motion.div
                 key={`${entry.timestamp}-${index}`}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
                 className={`flex items-center justify-between p-3 sm:p-4 rounded-xl ${
-                  index === 0
+                  rank === 1
                     ? 'bg-gold/20 border-2 border-gold'
-                    : index < 3
+                    : isTopThree
                     ? 'bg-gold/10 border border-gold/30'
                     : 'bg-white/5 border border-white/10'
                 }`}
@@ -121,10 +146,10 @@ export default function LeaderboardScreen({ onBack }: LeaderboardScreenProps) {
                 <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
                   <div
                     className={`font-nokia font-bold text-lg sm:text-xl md:text-2xl flex-shrink-0 ${
-                      index === 0 ? 'text-gold' : index < 3 ? 'text-gold/80' : 'text-off-white'
+                      rank === 1 ? 'text-gold' : isTopThree ? 'text-gold/80' : 'text-off-white'
                     }`}
                   >
-                    {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
+                    {rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="font-nokia font-bold text-off-white text-sm sm:text-base md:text-lg truncate">
@@ -158,7 +183,9 @@ export default function LeaderboardScreen({ onBack }: LeaderboardScreenProps) {
                   )}
                 </div>
               </motion.div>
-            ))}
+              )
+            })
+            })()}
           </div>
         )}
 

@@ -53,7 +53,7 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
       .select('*')
       .order('score', { ascending: false })
       .order('percentage', { ascending: false })
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false }) // Newest first for equal scores (tie-breaker only)
       .limit(MAX_ENTRIES)
 
     if (error) {
@@ -175,7 +175,7 @@ export async function getTopScores(limit: number = 10): Promise<LeaderboardEntry
       .select('*')
       .order('score', { ascending: false })
       .order('percentage', { ascending: false })
-      .order('created_at', { ascending: false })
+      .order('created_at', { ascending: false }) // Newest first for equal scores (tie-breaker only)
       .limit(limit)
 
     if (error) {

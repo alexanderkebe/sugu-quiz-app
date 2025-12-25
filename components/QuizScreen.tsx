@@ -22,13 +22,13 @@ export default function QuizScreen({
 }: QuizScreenProps) {
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null)
   const [isLocked, setIsLocked] = useState(false)
-  const [timeLeft, setTimeLeft] = useState(30)
+  const [timeLeft, setTimeLeft] = useState(50)
   const [isTimeout, setIsTimeout] = useState(false)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
   // Reset timer when question changes
   useEffect(() => {
-    setTimeLeft(30)
+    setTimeLeft(50)
     setIsTimeout(false)
     setSelectedAnswer(null)
     setIsLocked(false)
