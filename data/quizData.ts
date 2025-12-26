@@ -24,7 +24,7 @@ export const quizData: Question[] = [
       'በዘር ሐረግ እንድትቆጠር ለማድረግ',
       'ሁሉም',
     ],
-    correctAnswer: 1, // ω - Option ለ
+    correctAnswer: 4, // ω - Option ሠ (ሁሉም)
   },
   {
     text: 'ስለቅዱሳን በአጸደ ነፍስ ስላላቸው አዋቂነትና አማላጅነት ፣ የሚያስረዳ የመጽሐፍ ቅዱስ ታሪክ የትኛው ነው?',
