@@ -46,12 +46,29 @@ export default function Home() {
     setGameState('nameInput')
   }
 
-  const handleNameSubmit = (name: string) => {
+  const handleNameSubmit = async (name: string) => {
     setPlayerName(name)
-    // Select 7 random questions and shuffle them
-    // Use allQuestions (from database) or fallback to quizData
-    const questionsToUse = allQuestions.length > 0 ? allQuestions : quizData
+    
+    // Fetch fresh questions from database every time a quiz starts
+    const freshQuestions = await getQuestionsFromDatabase()
+    const isFromDatabase = freshQuestions.length > 0
+    const questionsToUse = isFromDatabase ? freshQuestions : quizData
+    
+    // Log the source of questions
+   /*  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log(`📚 Questions loaded from: ${isFromDatabase ? '✅ DATABASE' : '⚠️ LOCAL FALLBACK (quizData.ts)'}`)
+    console.log(`📊 Total questions available: ${questionsToUse.length}`)
+     */
+    // Select 7 random questions
     const randomQuestions = getRandomQuizQuestions(questionsToUse)
+    
+    // Log the selected random questions
+ /*    console.log(`🎲 7 Random questions selected:`)
+    randomQuestions.forEach((q, i) => {
+      console.log(`   ${i + 1}. ${q.text.substring(0, 60)}...`)
+    })
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+     */
     setSelectedQuestions(randomQuestions)
     setGameState('quiz')
     setCurrentQuestion(0)
@@ -82,6 +99,7 @@ export default function Home() {
   }
 
   const handlePlayAgain = () => {
+    console.log('🔄 Play Again clicked - resetting game state')
     setGameState('splash')
     setAnswers([])
     setCurrentQuestion(0)
