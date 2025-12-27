@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Link from 'next/link'
 import {
   getAllQuizAttempts,
   getQuizAttemptsByPlayer,
@@ -83,9 +84,18 @@ export default function QuizAttemptsAdminPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 sm:mb-8"
         >
-          <h1 className="font-nokia font-bold text-gold text-3xl sm:text-4xl md:text-5xl mb-4 text-center">
-            📊 Quiz Attempts Admin
-          </h1>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <Link
+              href="/admin"
+              className="font-nokia text-gold hover:text-gold/80 text-lg sm:text-xl"
+            >
+              ← Dashboard
+            </Link>
+            <h1 className="font-nokia font-bold text-gold text-3xl sm:text-4xl md:text-5xl text-center flex-1">
+              📊 Quiz Attempts Admin
+            </h1>
+            <div className="w-24"></div>
+          </div>
           <p className="font-nokia text-off-white text-center text-base sm:text-lg">
             View detailed quiz attempts and user responses
           </p>
@@ -166,7 +176,7 @@ export default function QuizAttemptsAdminPage() {
                 <p className="font-nokia text-off-white text-xl sm:text-2xl">No attempts found</p>
               </div>
             ) : (
-              <div className="space-y-3 max-h-[60vh] sm:max-h-[80vh] overflow-y-auto">
+              <div className="space-y-3 max-h-[60vh] sm:max-h-[80vh] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(238, 193, 48, 0.5) transparent' }}>
                 <AnimatePresence>
                   {filteredAttempts.map((attempt) => (
                     <motion.div
@@ -271,7 +281,7 @@ export default function QuizAttemptsAdminPage() {
                   </div>
                 </div>
 
-                <div className="space-y-3 sm:space-y-4 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto">
+                <div className="space-y-3 sm:space-y-4 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(238, 193, 48, 0.5) transparent' }}>
                   {selectedAttempt.responses.map((response, index) => (
                     <motion.div
                       key={response.id || index}

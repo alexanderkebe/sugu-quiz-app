@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import Link from 'next/link'
 import {
   getQuestionsWithIds,
   addQuestion,
@@ -10,6 +11,7 @@ import {
   QuestionWithId,
 } from '@/utils/questionUtils'
 import { Question } from '@/types/quiz'
+import { importQuestionsFromQuizData, checkQuestionImportStatus } from '@/utils/questionImportUtils'
 
 export default function QuestionsAdminPage() {
   const [questions, setQuestions] = useState<QuestionWithId[]>([])
@@ -22,10 +24,23 @@ export default function QuestionsAdminPage() {
     correctAnswer: 0,
   })
   const [deletingId, setDeletingId] = useState<number | null>(null)
+  const [isImporting, setIsImporting] = useState(false)
+  const [importStatus, setImportStatus] = useState<{
+    totalInFile: number
+    totalInDatabase: number
+    missing: number
+    percentage: number
+  } | null>(null)
 
   useEffect(() => {
     loadQuestions()
+    checkStatus()
   }, [])
+
+  const checkStatus = async () => {
+    const status = await checkQuestionImportStatus()
+    setImportStatus(status)
+  }
 
   const loadQuestions = async () => {
     setIsLoading(true)
@@ -146,6 +161,26 @@ export default function QuestionsAdminPage() {
     })
   }
 
+  const handleImport = async () => {
+    if (!confirm('Import all questions from quizData.ts? This will skip questions that already exist.')) {
+      return
+    }
+
+    setIsImporting(true)
+    const results = await importQuestionsFromQuizData()
+    setIsImporting(false)
+
+    if (results.success > 0 || results.skipped > 0) {
+      alert(
+        `Import complete!\n✅ Success: ${results.success}\n⏭️  Skipped: ${results.skipped}\n❌ Failed: ${results.failed}`
+      )
+      await loadQuestions()
+      await checkStatus()
+    } else {
+      alert(`Import failed: ${results.errors.join(', ')}`)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-burgundy via-[#7a0f1f] to-burgundy p-4 sm:p-6 lg:p-8">
       <div className="max-w-6xl mx-auto">
@@ -155,9 +190,18 @@ export default function QuestionsAdminPage() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-6 sm:mb-8"
         >
-          <h1 className="font-nokia font-bold text-gold text-3xl sm:text-4xl md:text-5xl mb-4 text-center">
-            📝 Questions Admin
-          </h1>
+          <div className="flex items-center justify-center gap-4 mb-4">
+            <Link
+              href="/admin"
+              className="font-nokia text-gold hover:text-gold/80 text-lg sm:text-xl"
+            >
+              ← Dashboard
+            </Link>
+            <h1 className="font-nokia font-bold text-gold text-3xl sm:text-4xl md:text-5xl text-center flex-1">
+              📝 Questions Admin
+            </h1>
+            <div className="w-24"></div>
+          </div>
           <p className="font-nokia text-off-white text-center text-base sm:text-lg">
             Add, edit, and delete quiz questions
           </p>
@@ -281,23 +325,46 @@ export default function QuestionsAdminPage() {
           </motion.div>
         )}
 
-        {/* Add Button */}
+        {/* Add Button and Import */}
         {!isAdding && editingId === null && (
-          <motion.button
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={handleAdd}
-            className="mb-6 w-full sm:w-auto font-nokia font-bold text-gold text-base sm:text-lg px-6 py-3 rounded-xl cursor-pointer min-h-[44px]"
-            style={{
-              background: 'rgba(255, 255, 255, 0.15)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-            }}
-          >
-            + Add New Question
-          </motion.button>
+          <div className="mb-6 flex flex-col sm:flex-row gap-3">
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleAdd}
+              className="flex-1 sm:flex-none font-nokia font-bold text-gold text-base sm:text-lg px-6 py-3 rounded-xl cursor-pointer min-h-[44px]"
+              style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}
+            >
+              + Add New Question
+            </motion.button>
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleImport}
+              disabled={isImporting}
+              className="flex-1 sm:flex-none font-nokia font-bold text-blue-300 text-base sm:text-lg px-6 py-3 rounded-xl cursor-pointer min-h-[44px] disabled:opacity-50"
+              style={{
+                background: 'rgba(59, 130, 246, 0.15)',
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+              }}
+            >
+              {isImporting ? '⏳ Importing...' : '📥 Import from quizData.ts'}
+            </motion.button>
+            {importStatus && (
+              <div className="text-center sm:text-left font-nokia text-off-white/70 text-xs sm:text-sm px-4 py-2 rounded-xl bg-white/5">
+                {importStatus.percentage}% imported ({importStatus.totalInDatabase}/{importStatus.totalInFile})
+              </div>
+            )}
+          </div>
         )}
 
         {/* Questions List */}
@@ -317,7 +384,7 @@ export default function QuestionsAdminPage() {
             <p className="font-nokia text-off-white text-xl sm:text-2xl">No questions found</p>
           </div>
         ) : (
-          <div className="space-y-3 sm:space-y-4">
+          <div className="space-y-3 sm:space-y-4 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto pr-2">
             <AnimatePresence>
               {questions.map((question, index) => (
                 <motion.div
