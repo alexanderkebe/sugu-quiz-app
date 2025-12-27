@@ -33,6 +33,14 @@ export default function QuestionsAdminPage() {
   } | null>(null)
 
   useEffect(() => {
+    // Enable scrolling on admin pages
+    document.body.classList.add('admin-page')
+    return () => {
+      document.body.classList.remove('admin-page')
+    }
+  }, [])
+
+  useEffect(() => {
     loadQuestions()
     checkStatus()
   }, [])
@@ -384,7 +392,7 @@ export default function QuestionsAdminPage() {
             <p className="font-nokia text-off-white text-xl sm:text-2xl">No questions found</p>
           </div>
         ) : (
-          <div className="space-y-3 sm:space-y-4 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto pr-2">
+          <div className="space-y-3 sm:space-y-4 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto pr-2" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
             <AnimatePresence>
               {questions.map((question, index) => (
                 <motion.div

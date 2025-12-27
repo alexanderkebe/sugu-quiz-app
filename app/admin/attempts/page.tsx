@@ -18,6 +18,14 @@ export default function QuizAttemptsAdminPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null)
 
   useEffect(() => {
+    // Enable scrolling on admin pages
+    document.body.classList.add('admin-page')
+    return () => {
+      document.body.classList.remove('admin-page')
+    }
+  }, [])
+
+  useEffect(() => {
     loadAttempts()
   }, [])
 
@@ -176,7 +184,7 @@ export default function QuizAttemptsAdminPage() {
                 <p className="font-nokia text-off-white text-xl sm:text-2xl">No attempts found</p>
               </div>
             ) : (
-              <div className="space-y-3 max-h-[60vh] sm:max-h-[80vh] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(238, 193, 48, 0.5) transparent' }}>
+              <div className="space-y-3 max-h-[60vh] sm:max-h-[80vh] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(238, 193, 48, 0.5) transparent', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
                 <AnimatePresence>
                   {filteredAttempts.map((attempt) => (
                     <motion.div
@@ -281,7 +289,7 @@ export default function QuizAttemptsAdminPage() {
                   </div>
                 </div>
 
-                <div className="space-y-3 sm:space-y-4 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(238, 193, 48, 0.5) transparent' }}>
+                <div className="space-y-3 sm:space-y-4 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(238, 193, 48, 0.5) transparent', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
                   {selectedAttempt.responses.map((response, index) => (
                     <motion.div
                       key={response.id || index}

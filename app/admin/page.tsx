@@ -19,6 +19,14 @@ export default function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    // Enable scrolling on admin pages
+    document.body.classList.add('admin-page')
+    return () => {
+      document.body.classList.remove('admin-page')
+    }
+  }, [])
+
+  useEffect(() => {
     loadStats()
   }, [])
 

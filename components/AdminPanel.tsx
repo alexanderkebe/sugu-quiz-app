@@ -14,6 +14,14 @@ export default function AdminPanel() {
   const [sortBy, setSortBy] = useState<'score' | 'date' | 'name'>('score')
 
   useEffect(() => {
+    // Enable scrolling on admin pages
+    document.body.classList.add('admin-page')
+    return () => {
+      document.body.classList.remove('admin-page')
+    }
+  }, [])
+
+  useEffect(() => {
     loadEntries()
   }, [])
 
@@ -219,7 +227,7 @@ export default function AdminPanel() {
             </p>
           </motion.div>
         ) : (
-          <div className="space-y-3 sm:space-y-4 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(238, 193, 48, 0.5) transparent' }}>
+          <div className="space-y-3 sm:space-y-4 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto pr-2" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(238, 193, 48, 0.5) transparent', WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
             <AnimatePresence>
               {filteredAndSorted.map((entry, index) => (
                 <motion.div

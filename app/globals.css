@@ -43,6 +43,29 @@ body {
   padding: 0;
 }
 
+/* Allow scrolling on admin pages */
+body.admin-page {
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  -webkit-overflow-scrolling: touch;
+  height: auto !important;
+  min-height: 100vh;
+}
+
+/* Mobile scroll improvements */
+@media (max-width: 768px) {
+  body.admin-page {
+    position: relative;
+  }
+  
+  /* Better mobile scrolling for scrollable containers */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+  }
+}
+
 /* Performance Optimizations */
 * {
   transform: translateZ(0);
