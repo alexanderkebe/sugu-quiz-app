@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Question } from '@/types/quiz'
 import { addToLeaderboard } from '@/utils/leaderboardUtils'
@@ -50,41 +50,47 @@ export default function ResultsScreen({
     }
   }, [percentage])
 
+  // Ref to prevent double-saving in React Strict Mode
+  const hasSavedRef = useRef(false)
+
   // Automatically save score and quiz attempt when results screen loads
   useEffect(() => {
     const saveScore = async () => {
-      if (playerName.trim() && !scoreSubmitted && !isSubmitting) {
-        setIsSubmitting(true)
+      // Use ref to prevent double execution in React Strict Mode
+      if (hasSavedRef.current) return
+      if (!playerName.trim()) return
+      
+      hasSavedRef.current = true
+      setIsSubmitting(true)
+      
+      try {
+        // Save to leaderboard
+        const success = await addToLeaderboard({
+          name: playerName.trim(),
+          score,
+          totalQuestions,
+          percentage,
+        })
         
-        try {
-          // Save to leaderboard
-          const success = await addToLeaderboard({
-            name: playerName.trim(),
-            score,
-            totalQuestions,
-            percentage,
-          })
-          
-          // Save quiz attempt with all responses (regardless of leaderboard success)
-          await saveQuizAttempt(playerName.trim(), questions, answers, score, percentage)
-          
-          setIsSubmitting(false)
-          if (success) {
-            setScoreSubmitted(true)
-          } else {
-            // Show error message if save failed
-            const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-            const isValidKey = anonKey && (anonKey.length > 20 || anonKey.startsWith('sb_publishable_'))
-            const errorMsg = !isValidKey
-              ? 'Supabase not configured. Please add your API key to .env.local file. See GET_API_KEY.md for instructions.'
-              : 'Failed to save score. Check browser console (F12) for details. Make sure the database table exists and you ran the SQL script.'
-            console.error(errorMsg)
-            console.error('Score save failed. Check the console above for detailed error information.')
-          }
-        } catch (error) {
-          console.error('Error saving score:', error)
-          setIsSubmitting(false)
+        // Save quiz attempt with all responses (regardless of leaderboard success)
+        await saveQuizAttempt(playerName.trim(), questions, answers, score, percentage)
+        
+        setIsSubmitting(false)
+        if (success) {
+          setScoreSubmitted(true)
+        } else {
+          // Show error message if save failed
+          const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+          const isValidKey = anonKey && (anonKey.length > 20 || anonKey.startsWith('sb_publishable_'))
+          const errorMsg = !isValidKey
+            ? 'Supabase not configured. Please add your API key to .env.local file. See GET_API_KEY.md for instructions.'
+            : 'Failed to save score. Check browser console (F12) for details. Make sure the database table exists and you ran the SQL script.'
+          console.error(errorMsg)
+          console.error('Score save failed. Check the console above for detailed error information.')
         }
+      } catch (error) {
+        console.error('Error saving score:', error)
+        setIsSubmitting(false)
       }
     }
 

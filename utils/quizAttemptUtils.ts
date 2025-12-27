@@ -10,6 +10,7 @@ export interface QuizAttempt {
   totalQuestions: number
   percentage: number
   createdAt?: Date
+  expiresAt?: Date
 }
 
 export interface QuizAttemptResponse {
@@ -48,6 +49,9 @@ export async function saveQuizAttempt(
 
     const sessionId = getSessionId()
 
+    // Calculate expiry time (1 hour from now)
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
+
     // Insert quiz attempt
     const { data: attemptData, error: attemptError } = await supabase
       .from('quiz_attempts')
@@ -57,6 +61,7 @@ export async function saveQuizAttempt(
         score,
         total_questions: questions.length,
         percentage,
+        expires_at: expiresAt,
       })
       .select('id')
       .single()
@@ -112,10 +117,15 @@ export async function getAllQuizAttempts(): Promise<QuizAttemptWithResponses[]> 
       return []
     }
 
-    // Fetch attempts
+    // Cleanup expired attempts first
+    await cleanupExpiredAttempts()
+
+    // Fetch only non-expired attempts (cleanup already removed expired ones)
+    // Query fetches attempts where expires_at is null OR expires_at > now
     const { data: attempts, error: attemptsError } = await supabase
       .from('quiz_attempts')
       .select('*')
+      .gte('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false })
 
     if (attemptsError || !attempts) {
@@ -166,6 +176,7 @@ export async function getAllQuizAttempts(): Promise<QuizAttemptWithResponses[]> 
       totalQuestions: attempt.total_questions,
       percentage: attempt.percentage,
       createdAt: attempt.created_at ? new Date(attempt.created_at) : undefined,
+      expiresAt: attempt.expires_at ? new Date(attempt.expires_at) : undefined,
       responses: responsesByAttempt.get(attempt.id) || [],
     }))
   } catch (error) {
@@ -186,10 +197,12 @@ export async function getQuizAttemptsByPlayer(playerName: string): Promise<QuizA
       return []
     }
 
+    // Fetch only non-expired attempts for this player
     const { data: attempts, error: attemptsError } = await supabase
       .from('quiz_attempts')
       .select('*')
       .eq('player_name', playerName)
+      .gte('expires_at', new Date().toISOString())
       .order('created_at', { ascending: false })
 
     if (attemptsError || !attempts) {
@@ -237,6 +250,7 @@ export async function getQuizAttemptsByPlayer(playerName: string): Promise<QuizA
       totalQuestions: attempt.total_questions,
       percentage: attempt.percentage,
       createdAt: attempt.created_at ? new Date(attempt.created_at) : undefined,
+      expiresAt: attempt.expires_at ? new Date(attempt.expires_at) : undefined,
       responses: responsesByAttempt.get(attempt.id) || [],
     }))
   } catch (error) {
@@ -268,6 +282,43 @@ export async function deleteQuizAttempt(attemptId: number): Promise<boolean> {
   } catch (error) {
     console.error('Error deleting quiz attempt:', error)
     return false
+  }
+}
+
+/**
+ * Cleanup expired quiz attempts (hard delete)
+ */
+export async function cleanupExpiredAttempts(): Promise<number> {
+  try {
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    const isValidKey = anonKey && (anonKey.length > 20 || anonKey.startsWith('sb_publishable_'))
+    if (!isValidKey) {
+      console.warn('❌ Supabase not configured.')
+      return 0
+    }
+
+    const now = new Date().toISOString()
+    
+    // Delete expired attempts (responses cascade automatically)
+    const { data, error } = await supabase
+      .from('quiz_attempts')
+      .delete()
+      .lt('expires_at', now)
+      .select('id')
+
+    if (error) {
+      console.error('Error cleaning up expired attempts:', error)
+      return 0
+    }
+
+    const deletedCount = data?.length || 0
+    if (deletedCount > 0) {
+      console.log(`🧹 Cleaned up ${deletedCount} expired quiz attempts`)
+    }
+    return deletedCount
+  } catch (error) {
+    console.error('Error cleaning up expired attempts:', error)
+    return 0
   }
 }
 

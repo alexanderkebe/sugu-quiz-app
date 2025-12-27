@@ -7,6 +7,7 @@ import {
   getAllQuizAttempts,
   getQuizAttemptsByPlayer,
   deleteQuizAttempt,
+  cleanupExpiredAttempts,
   QuizAttemptWithResponses,
 } from '@/utils/quizAttemptUtils'
 
@@ -76,6 +77,20 @@ export default function QuizAttemptsAdminPage() {
       minute: '2-digit',
       second: '2-digit',
     })
+  }
+
+  const getExpiryInfo = (expiresAt: Date | undefined) => {
+    if (!expiresAt) return null
+    const now = new Date()
+    const expiry = new Date(expiresAt)
+    const diffMs = expiry.getTime() - now.getTime()
+    
+    if (diffMs <= 0) return { text: 'Expired', color: 'bg-red-500/30 text-red-300' }
+    
+    const diffMins = Math.floor(diffMs / (1000 * 60))
+    if (diffMins < 10) return { text: `${diffMins}m left`, color: 'bg-red-500/30 text-red-300' }
+    if (diffMins < 30) return { text: `${diffMins}m left`, color: 'bg-orange-500/30 text-orange-300' }
+    return { text: `${diffMins}m left`, color: 'bg-green-500/30 text-green-300' }
   }
 
   const filteredAttempts = attempts.filter((attempt) => {
@@ -225,7 +240,7 @@ export default function QuizAttemptsAdminPage() {
                           {deletingId === attempt.id ? '⏳' : '🗑️'}
                         </motion.button>
                       </div>
-                      <div className="flex gap-4 text-sm">
+                      <div className="flex gap-4 text-sm flex-wrap">
                         <div>
                           <span className="font-nokia text-off-white/70">Score: </span>
                           <span className="font-nokia font-bold text-gold">
@@ -236,6 +251,14 @@ export default function QuizAttemptsAdminPage() {
                           <span className="font-nokia text-off-white/70">%: </span>
                           <span className="font-nokia font-bold text-gold">{attempt.percentage}%</span>
                         </div>
+                        {(() => {
+                          const expiryInfo = getExpiryInfo(attempt.expiresAt)
+                          return expiryInfo ? (
+                            <div className={`font-nokia text-xs px-2 py-1 rounded-full ${expiryInfo.color}`}>
+                              ⏱️ {expiryInfo.text}
+                            </div>
+                          ) : null
+                        })()}
                       </div>
                     </motion.div>
                   ))}
