@@ -99,26 +99,27 @@ DROP POLICY IF EXISTS "Allow insert questions" ON questions;
 DROP POLICY IF EXISTS "Allow update questions" ON questions;
 DROP POLICY IF EXISTS "Allow delete questions" ON questions;
 
--- Policy: Allow anyone to read active questions
+-- Policy: Allow anyone (including anonymous users) to read active questions
 CREATE POLICY "Anyone can read active questions"
   ON questions
   FOR SELECT
   USING (is_active = TRUE);
 
--- Policy: Allow insert questions
+-- Policy: Allow anyone (including anonymous users) to insert questions
+-- This is needed for the import functionality using the anon key
 CREATE POLICY "Allow insert questions"
   ON questions
   FOR INSERT
   WITH CHECK (true);
 
--- Policy: Allow update questions
+-- Policy: Allow anyone (including anonymous users) to update questions
 CREATE POLICY "Allow update questions"
   ON questions
   FOR UPDATE
   USING (true)
   WITH CHECK (true);
 
--- Policy: Allow delete questions
+-- Policy: Allow anyone (including anonymous users) to delete questions
 CREATE POLICY "Allow delete questions"
   ON questions
   FOR DELETE

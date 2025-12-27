@@ -17,27 +17,33 @@ CREATE INDEX IF NOT EXISTS idx_questions_active ON questions(is_active) WHERE is
 -- Enable Row Level Security
 ALTER TABLE questions ENABLE ROW LEVEL SECURITY;
 
--- Policy: Allow anyone to read active questions
+-- Drop existing policies if they exist (for re-running this script)
+DROP POLICY IF EXISTS "Anyone can read active questions" ON questions;
+DROP POLICY IF EXISTS "Allow insert questions" ON questions;
+DROP POLICY IF EXISTS "Allow update questions" ON questions;
+DROP POLICY IF EXISTS "Allow delete questions" ON questions;
+
+-- Policy: Allow anyone (including anonymous users) to read active questions
 CREATE POLICY "Anyone can read active questions"
   ON questions
   FOR SELECT
   USING (is_active = TRUE);
 
--- Policy: Allow authenticated users to insert questions (for admin panel)
--- Note: You may want to restrict this further based on your auth setup
+-- Policy: Allow anyone (including anonymous users) to insert questions
+-- This is needed for the import functionality using the anon key
 CREATE POLICY "Allow insert questions"
   ON questions
   FOR INSERT
   WITH CHECK (true);
 
--- Policy: Allow authenticated users to update questions
+-- Policy: Allow anyone (including anonymous users) to update questions
 CREATE POLICY "Allow update questions"
   ON questions
   FOR UPDATE
   USING (true)
   WITH CHECK (true);
 
--- Policy: Allow authenticated users to delete questions (soft delete)
+-- Policy: Allow anyone (including anonymous users) to delete questions
 CREATE POLICY "Allow delete questions"
   ON questions
   FOR DELETE
