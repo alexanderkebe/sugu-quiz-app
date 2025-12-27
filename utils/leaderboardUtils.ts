@@ -64,7 +64,6 @@ export async function getLeaderboard(): Promise<LeaderboardEntry[]> {
     return (data || []).map((entry) => ({
       id: entry.id,
       name: entry.name,
-      phoneNumber: entry.phone_number || undefined,
       score: entry.score,
       totalQuestions: entry.total_questions,
       percentage: entry.percentage,
@@ -101,7 +100,7 @@ export async function addToLeaderboard(
 
     const { data, error } = await supabase.from('leaderboard').insert({
       name: entry.name,
-      phone_number: entry.phoneNumber || null,
+      phone_number: null, // Phone number removed
       score: entry.score,
       total_questions: entry.totalQuestions,
       percentage: entry.percentage,
@@ -186,7 +185,6 @@ export async function getTopScores(limit: number = 10): Promise<LeaderboardEntry
     return (data || []).map((entry) => ({
       id: entry.id,
       name: entry.name,
-      phoneNumber: entry.phone_number || undefined,
       score: entry.score,
       totalQuestions: entry.total_questions,
       percentage: entry.percentage,

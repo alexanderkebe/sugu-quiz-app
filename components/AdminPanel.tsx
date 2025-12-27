@@ -56,7 +56,6 @@ export default function AdminPanel() {
       const search = searchTerm.toLowerCase()
       return (
         entry.name.toLowerCase().includes(search) ||
-        entry.phoneNumber?.toLowerCase().includes(search) ||
         entry.score.toString().includes(search)
       )
     })
@@ -106,13 +105,13 @@ export default function AdminPanel() {
             padding: '1.5rem',
           }}
         >
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by name, phone, or score..."
-              className="flex-1 font-nokia text-base sm:text-lg px-4 py-2 sm:py-3 rounded-xl bg-white/10 border border-white/20 text-off-white placeholder-off-white/50 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/50"
+              placeholder="Search by name or score..."
+              className="flex-1 font-nokia text-base sm:text-lg px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-off-white placeholder-off-white/50 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/50 min-h-[44px]"
               style={{
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
@@ -121,7 +120,7 @@ export default function AdminPanel() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as 'score' | 'date' | 'name')}
-              className="font-nokia text-base sm:text-lg px-4 py-2 sm:py-3 rounded-xl bg-white/10 border border-white/20 text-off-white focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/50"
+              className="font-nokia text-base sm:text-lg px-4 py-3 rounded-xl bg-white/10 border border-white/20 text-off-white focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/50 min-h-[44px]"
               style={{
                 backdropFilter: 'blur(10px)',
                 WebkitBackdropFilter: 'blur(10px)',
@@ -135,7 +134,7 @@ export default function AdminPanel() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={loadEntries}
-              className="font-nokia font-bold text-gold text-base sm:text-lg px-6 py-2 sm:py-3 rounded-xl cursor-pointer"
+              className="font-nokia font-bold text-gold text-base sm:text-lg px-4 sm:px-6 py-3 rounded-xl cursor-pointer min-h-[44px]"
               style={{
                 background: 'rgba(255, 255, 255, 0.15)',
                 backdropFilter: 'blur(20px)',
@@ -153,7 +152,7 @@ export default function AdminPanel() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="mb-6 grid grid-cols-1 sm:grid-cols-3 gap-4"
+          className="mb-6 grid grid-cols-1 sm:grid-cols-2 gap-4"
         >
           <div
             className="text-center p-4 rounded-xl"
@@ -167,19 +166,6 @@ export default function AdminPanel() {
               {entries.length}
             </div>
             <div className="font-nokia text-off-white text-sm sm:text-base">Total Entries</div>
-          </div>
-          <div
-            className="text-center p-4 rounded-xl"
-            style={{
-              background: 'rgba(255, 255, 255, 0.1)',
-              backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-            }}
-          >
-            <div className="font-nokia font-bold text-gold text-2xl sm:text-3xl">
-              {entries.filter((e) => e.phoneNumber).length}
-            </div>
-            <div className="font-nokia text-off-white text-sm sm:text-base">With Phone</div>
           </div>
           <div
             className="text-center p-4 rounded-xl"
@@ -251,7 +237,7 @@ export default function AdminPanel() {
                           {entry.name || 'Anonymous'}
                         </div>
                       </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-sm sm:text-base">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-4 text-sm sm:text-base">
                         <div>
                           <span className="font-nokia text-off-white/70">Score: </span>
                           <span className="font-nokia font-bold text-gold">
@@ -261,12 +247,6 @@ export default function AdminPanel() {
                         <div>
                           <span className="font-nokia text-off-white/70">Percentage: </span>
                           <span className="font-nokia font-bold text-gold">{entry.percentage}%</span>
-                        </div>
-                        <div>
-                          <span className="font-nokia text-off-white/70">Phone: </span>
-                          <span className="font-nokia text-off-white">
-                            {entry.phoneNumber || 'N/A'}
-                          </span>
                         </div>
                         <div>
                           <span className="font-nokia text-off-white/70">Date: </span>
@@ -279,7 +259,7 @@ export default function AdminPanel() {
                       whileTap={{ scale: 0.9 }}
                       onClick={() => entry.id && handleDelete(entry.id, entry.name)}
                       disabled={deletingId === entry.id || !entry.id}
-                      className="text-red-400 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed p-3 sm:p-4 rounded-xl bg-red-500/20 border border-red-500/30 flex-shrink-0"
+                      className="text-red-400 hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed p-3 sm:p-4 rounded-xl bg-red-500/20 border border-red-500/30 flex-shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center"
                       title="Delete entry"
                     >
                       {deletingId === entry.id ? '⏳' : '🗑️'}

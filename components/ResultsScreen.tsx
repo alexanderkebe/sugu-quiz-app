@@ -1,14 +1,16 @@
 'use client'
 
 import { useMemo, useState, useEffect } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Question } from '@/types/quiz'
 import { addToLeaderboard } from '@/utils/leaderboardUtils'
+import { saveQuizAttempt } from '@/utils/quizAttemptUtils'
 import { soundManager } from '@/utils/soundEffects'
 
 interface ResultsScreenProps {
   answers: number[]
   questions: Question[]
+  playerName: string
   onPlayAgain: () => void
   onShowLeaderboard: () => void
 }
@@ -16,13 +18,11 @@ interface ResultsScreenProps {
 export default function ResultsScreen({
   answers,
   questions,
+  playerName,
   onPlayAgain,
   onShowLeaderboard,
 }: ResultsScreenProps) {
-  const [playerName, setPlayerName] = useState('')
-  const [phoneNumber, setPhoneNumber] = useState('')
-  const [nameSubmitted, setNameSubmitted] = useState(false)
-  const [showNameInput, setShowNameInput] = useState(true)
+  const [scoreSubmitted, setScoreSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const score = useMemo(() => {
@@ -50,40 +50,41 @@ export default function ResultsScreen({
     }
   }, [percentage])
 
-  const handleNameSubmit = async () => {
-    if (playerName.trim() && !isSubmitting) {
-      // Validate phone number format (basic validation)
-      const phoneRegex = /^[\d\s\-\+\(\)]+$/
-      if (phoneNumber.trim() && !phoneRegex.test(phoneNumber.trim())) {
-        alert('Please enter a valid phone number')
-        return
-      }
-
-      setIsSubmitting(true)
-      const success = await addToLeaderboard({
-        name: playerName.trim(),
-        phoneNumber: phoneNumber.trim() || undefined,
-        score,
-        totalQuestions,
-        percentage,
-      })
-      setIsSubmitting(false)
-      if (success) {
-        setNameSubmitted(true)
-        setShowNameInput(false)
-      } else {
-        // Show error message if save failed
-        // Check if Supabase is properly configured (supports both old and new key formats)
-        const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-        const isValidKey = anonKey && (anonKey.length > 20 || anonKey.startsWith('sb_publishable_'))
-        const errorMsg = !isValidKey
-          ? 'Supabase not configured. Please add your API key to .env.local file. See GET_API_KEY.md for instructions.'
-          : 'Failed to save score. Check browser console (F12) for details. Make sure the database table exists and you ran the SQL script.'
-        alert(errorMsg)
-        console.error('Score save failed. Check the console above for detailed error information.')
+  // Automatically save score and quiz attempt when results screen loads
+  useEffect(() => {
+    const saveScore = async () => {
+      if (playerName.trim() && !scoreSubmitted && !isSubmitting) {
+        setIsSubmitting(true)
+        
+        // Save to leaderboard
+        const success = await addToLeaderboard({
+          name: playerName.trim(),
+          score,
+          totalQuestions,
+          percentage,
+        })
+        
+        // Save quiz attempt with all responses (regardless of leaderboard success)
+        await saveQuizAttempt(playerName.trim(), questions, answers, score, percentage)
+        
+        setIsSubmitting(false)
+        if (success) {
+          setScoreSubmitted(true)
+        } else {
+          // Show error message if save failed
+          const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+          const isValidKey = anonKey && (anonKey.length > 20 || anonKey.startsWith('sb_publishable_'))
+          const errorMsg = !isValidKey
+            ? 'Supabase not configured. Please add your API key to .env.local file. See GET_API_KEY.md for instructions.'
+            : 'Failed to save score. Check browser console (F12) for details. Make sure the database table exists and you ran the SQL script.'
+          console.error(errorMsg)
+          console.error('Score save failed. Check the console above for detailed error information.')
+        }
       }
     }
-  }
+
+    saveScore()
+  }, [playerName, score, totalQuestions, percentage, scoreSubmitted, isSubmitting, questions, answers])
 
   const getMessage = () => {
     if (percentage >= 85) {
@@ -161,81 +162,32 @@ export default function ResultsScreen({
           {message.message}
         </motion.p>
 
-        {/* Name Input */}
-        <AnimatePresence>
-          {showNameInput && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.4, delay: 0.8 }}
-              className="mb-4 sm:mb-6"
-            >
-              <label className="block font-nokia text-off-white text-sm sm:text-base mb-2">
-                Enter your details for the leaderboard:
-              </label>
-              <div className="space-y-3 mb-3">
-                <input
-                  type="text"
-                  value={playerName}
-                  onChange={(e) => setPlayerName(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleNameSubmit()}
-                  maxLength={20}
-                  placeholder="Your name *"
-                  className="w-full font-nokia text-base sm:text-lg px-4 py-2 sm:py-3 rounded-xl bg-white/10 border border-white/20 text-off-white placeholder-off-white/50 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/50"
-                  style={{
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                  }}
-                />
-                <input
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleNameSubmit()}
-                  placeholder="Phone number (to contact you if you win)"
-                  className="w-full font-nokia text-base sm:text-lg px-4 py-2 sm:py-3 rounded-xl bg-white/10 border border-white/20 text-off-white placeholder-off-white/50 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/50"
-                  style={{
-                    backdropFilter: 'blur(10px)',
-                    WebkitBackdropFilter: 'blur(10px)',
-                  }}
-                />
-              </div>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleNameSubmit}
-                disabled={!playerName.trim() || isSubmitting}
-                className="w-full font-nokia font-bold text-gold text-base sm:text-lg px-4 sm:px-6 py-2 sm:py-3 rounded-xl cursor-pointer transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
-                style={{
-                  background: playerName.trim() ? 'rgba(255, 255, 255, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                  backdropFilter: 'blur(20px)',
-                  WebkitBackdropFilter: 'blur(20px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
-                }}
-              >
-                {isSubmitting ? 'Saving...' : 'Submit'}
-              </motion.button>
-              {nameSubmitted && (
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="font-nokia text-gold text-sm sm:text-base mt-2"
-                >
-                  ✓ Score saved!
-                </motion.p>
-              )}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Score Save Status */}
+        {isSubmitting && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="font-nokia text-gold text-sm sm:text-base mb-4"
+          >
+            Saving your score...
+          </motion.p>
+        )}
+        {scoreSubmitted && (
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="font-nokia text-gold text-sm sm:text-base mb-4"
+          >
+            ✓ Score saved to leaderboard!
+          </motion.p>
+        )}
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: nameSubmitted ? 0.9 : 0.8 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
             whileHover={{ y: -3, scale: 1.02 }}
             whileTap={{ y: -1, scale: 0.98 }}
             onClick={onPlayAgain}
@@ -254,7 +206,7 @@ export default function ResultsScreen({
           <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: nameSubmitted ? 1.0 : 0.9 }}
+            transition={{ duration: 0.6, delay: 0.9 }}
             whileHover={{ y: -3, scale: 1.02 }}
             whileTap={{ y: -1, scale: 0.98 }}
             onClick={onShowLeaderboard}

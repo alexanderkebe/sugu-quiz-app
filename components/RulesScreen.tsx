@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 
 interface RulesScreenProps {
-  onStart: () => void
+  onStart: () => void // Now navigates to name input screen
 }
 
 const rules = [
@@ -77,7 +77,7 @@ export default function RulesScreen({ onStart }: RulesScreenProps) {
             textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
           }}
         >
-          ጨዋታውን ጀምር
+          Continue
         </motion.button>
       </motion.div>
     </div>
