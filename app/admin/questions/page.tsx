@@ -175,17 +175,28 @@ export default function QuestionsAdminPage() {
     }
 
     setIsImporting(true)
-    const results = await importQuestionsFromQuizData()
-    setIsImporting(false)
+    try {
+      // Use API route for better error handling
+      const response = await fetch('/api/import-questions', {
+        method: 'POST',
+      })
+      const data = await response.json()
 
-    if (results.success > 0 || results.skipped > 0) {
-      alert(
-        `Import complete!\n✅ Success: ${results.success}\n⏭️  Skipped: ${results.skipped}\n❌ Failed: ${results.failed}`
-      )
-      await loadQuestions()
-      await checkStatus()
-    } else {
-      alert(`Import failed: ${results.errors.join(', ')}`)
+      if (data.success) {
+        const results = data.results
+        alert(
+          `Import complete!\n✅ Successfully imported: ${results.success}\n⏭️  Skipped (duplicates): ${results.skipped}\n❌ Failed: ${results.failed}`
+        )
+        await loadQuestions()
+        await checkStatus()
+      } else {
+        alert(`Import failed: ${data.error || 'Unknown error'}`)
+      }
+    } catch (error) {
+      console.error('Import error:', error)
+      alert(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setIsImporting(false)
     }
   }
 
