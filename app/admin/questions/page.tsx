@@ -224,6 +224,13 @@ export default function QuestionsAdminPage() {
           <p className="font-nokia text-off-white text-center text-base sm:text-lg">
             Add, edit, and delete quiz questions
           </p>
+          {!isLoading && (
+            <div className="text-center mt-2">
+              <span className="font-nokia text-gold text-sm sm:text-base">
+                Total Questions in Database: <strong>{questions.length}</strong>
+              </span>
+            </div>
+          )}
         </motion.div>
 
         {/* Add/Edit Form */}
