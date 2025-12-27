@@ -5,7 +5,6 @@
 CREATE TABLE IF NOT EXISTS leaderboard (
   id BIGSERIAL PRIMARY KEY,
   name TEXT NOT NULL,
-  phone_number TEXT, -- Phone number for contacting winners
   score INTEGER NOT NULL,
   total_questions INTEGER NOT NULL,
   percentage INTEGER NOT NULL,
@@ -13,7 +12,30 @@ CREATE TABLE IF NOT EXISTS leaderboard (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Add session_id column if it doesn't exist (for existing tables)
+DO $$ 
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'leaderboard' AND column_name = 'session_id'
+  ) THEN
+    ALTER TABLE leaderboard ADD COLUMN session_id TEXT;
+  END IF;
+END $$;
+
+-- Remove phone_number column if it exists (we don't use it anymore)
+DO $$ 
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'leaderboard' AND column_name = 'phone_number'
+  ) THEN
+    ALTER TABLE leaderboard DROP COLUMN phone_number;
+  END IF;
+END $$;
+
 -- Create index for faster queries
+CREATE INDEX IF NOT EXISTS idx_leaderboard_session ON leaderboard(session_id);
 CREATE INDEX IF NOT EXISTS idx_leaderboard_score ON leaderboard(score DESC, percentage DESC, created_at DESC);
 
 -- Enable Row Level Security (RLS)
