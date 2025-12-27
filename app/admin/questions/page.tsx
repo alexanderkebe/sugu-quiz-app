@@ -180,13 +180,28 @@ export default function QuestionsAdminPage() {
       const response = await fetch('/api/import-questions', {
         method: 'POST',
       })
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Network error' }))
+        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
+      }
+      
       const data = await response.json()
 
       if (data.success) {
         const results = data.results
-        alert(
-          `Import complete!\n✅ Successfully imported: ${results.success}\n⏭️  Skipped (duplicates): ${results.skipped}\n❌ Failed: ${results.failed}`
-        )
+        
+        // Show detailed results
+        let message = `Import complete!\n\n✅ Successfully imported: ${results.success}\n⏭️  Skipped (duplicates): ${results.skipped}\n❌ Failed: ${results.failed}`
+        
+        if (results.errors.length > 0) {
+          message += `\n\nErrors:\n${results.errors.slice(0, 5).join('\n')}`
+          if (results.errors.length > 5) {
+            message += `\n... and ${results.errors.length - 5} more errors`
+          }
+        }
+        
+        alert(message)
         await loadQuestions()
         await checkStatus()
       } else {
@@ -194,7 +209,7 @@ export default function QuestionsAdminPage() {
       }
     } catch (error) {
       console.error('Import error:', error)
-      alert(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      alert(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}\n\nCheck the browser console (F12) for more details.`)
     } finally {
       setIsImporting(false)
     }

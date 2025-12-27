@@ -41,16 +41,23 @@ export async function importQuestionsFromQuizData(): Promise<{
         }
 
         // Add question to database
-        const id = await addQuestion(question)
-        if (id) {
-          console.log(`✅ Imported question ${i + 1}/${quizData.length}: ${question.text.substring(0, 50)}...`)
-          results.success++
-          // Add to existing set to avoid duplicates in the same import
-          existingTexts.add(questionTextLower)
-        } else {
-          console.error(`❌ Failed to import question ${i + 1}`)
+        try {
+          const id = await addQuestion(question)
+          if (id) {
+            console.log(`✅ Imported question ${i + 1}/${quizData.length}: ${question.text.substring(0, 50)}...`)
+            results.success++
+            // Add to existing set to avoid duplicates in the same import
+            existingTexts.add(questionTextLower)
+          } else {
+            console.error(`❌ Failed to import question ${i + 1}: No ID returned`)
+            results.failed++
+            results.errors.push(`Question ${i + 1}: No ID returned from database`)
+          }
+        } catch (dbError) {
+          console.error(`❌ Database error importing question ${i + 1}:`, dbError)
           results.failed++
-          results.errors.push(`Question ${i + 1}: Failed to add to database`)
+          const errorMsg = dbError instanceof Error ? dbError.message : String(dbError)
+          results.errors.push(`Question ${i + 1}: ${errorMsg}`)
         }
       } catch (error) {
         console.error(`❌ Error importing question ${i + 1}:`, error)

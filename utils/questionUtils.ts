@@ -93,14 +93,28 @@ export async function addQuestion(question: Question): Promise<number | null> {
     const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
     const isValidKey = anonKey && (anonKey.length > 20 || anonKey.startsWith('sb_publishable_'))
     if (!isValidKey) {
-      console.warn('❌ Supabase not configured. Cannot add question.')
-      return null
+      const errorMsg = '❌ Supabase not configured. Cannot add question. Please check NEXT_PUBLIC_SUPABASE_ANON_KEY.'
+      console.warn(errorMsg)
+      throw new Error(errorMsg)
     }
+
+    // Validate question data
+    if (!question.text || question.text.trim().length === 0) {
+      throw new Error('Question text is required')
+    }
+    if (!question.options || question.options.length < 2) {
+      throw new Error('Question must have at least 2 options')
+    }
+    if (question.correctAnswer < 0 || question.correctAnswer >= question.options.length) {
+      throw new Error(`Correct answer index ${question.correctAnswer} is out of range (0-${question.options.length - 1})`)
+    }
+
+    console.log(`📝 Adding question: "${question.text.substring(0, 50)}..." with ${question.options.length} options, correct answer: ${question.correctAnswer}`)
 
     const { data, error } = await supabase
       .from('questions')
       .insert({
-        text: question.text,
+        text: question.text.trim(),
         options: question.options,
         correct_answer: question.correctAnswer,
         is_active: true,
@@ -109,14 +123,23 @@ export async function addQuestion(question: Question): Promise<number | null> {
       .single()
 
     if (error) {
-      console.error('Error adding question:', error)
-      return null
+      console.error('❌ Error adding question to database:', error)
+      console.error('   Error code:', error.code)
+      console.error('   Error message:', error.message)
+      console.error('   Error details:', error.details)
+      console.error('   Error hint:', error.hint)
+      throw new Error(`Database error: ${error.message} (Code: ${error.code})`)
     }
 
-    return data?.id || null
+    if (!data || !data.id) {
+      console.error('❌ No data returned after insert')
+      throw new Error('No data returned after insert')
+    }
+
+    return data.id
   } catch (error) {
-    console.error('Error adding question:', error)
-    return null
+    console.error('❌ Exception adding question:', error)
+    throw error // Re-throw to let caller handle it
   }
 }
 
