@@ -56,35 +56,41 @@ export default function ResultsScreen({
       if (playerName.trim() && !scoreSubmitted && !isSubmitting) {
         setIsSubmitting(true)
         
-        // Save to leaderboard
-        const success = await addToLeaderboard({
-          name: playerName.trim(),
-          score,
-          totalQuestions,
-          percentage,
-        })
-        
-        // Save quiz attempt with all responses (regardless of leaderboard success)
-        await saveQuizAttempt(playerName.trim(), questions, answers, score, percentage)
-        
-        setIsSubmitting(false)
-        if (success) {
-          setScoreSubmitted(true)
-        } else {
-          // Show error message if save failed
-          const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-          const isValidKey = anonKey && (anonKey.length > 20 || anonKey.startsWith('sb_publishable_'))
-          const errorMsg = !isValidKey
-            ? 'Supabase not configured. Please add your API key to .env.local file. See GET_API_KEY.md for instructions.'
-            : 'Failed to save score. Check browser console (F12) for details. Make sure the database table exists and you ran the SQL script.'
-          console.error(errorMsg)
-          console.error('Score save failed. Check the console above for detailed error information.')
+        try {
+          // Save to leaderboard
+          const success = await addToLeaderboard({
+            name: playerName.trim(),
+            score,
+            totalQuestions,
+            percentage,
+          })
+          
+          // Save quiz attempt with all responses (regardless of leaderboard success)
+          await saveQuizAttempt(playerName.trim(), questions, answers, score, percentage)
+          
+          setIsSubmitting(false)
+          if (success) {
+            setScoreSubmitted(true)
+          } else {
+            // Show error message if save failed
+            const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+            const isValidKey = anonKey && (anonKey.length > 20 || anonKey.startsWith('sb_publishable_'))
+            const errorMsg = !isValidKey
+              ? 'Supabase not configured. Please add your API key to .env.local file. See GET_API_KEY.md for instructions.'
+              : 'Failed to save score. Check browser console (F12) for details. Make sure the database table exists and you ran the SQL script.'
+            console.error(errorMsg)
+            console.error('Score save failed. Check the console above for detailed error information.')
+          }
+        } catch (error) {
+          console.error('Error saving score:', error)
+          setIsSubmitting(false)
         }
       }
     }
 
     saveScore()
-  }, [playerName, score, totalQuestions, percentage, scoreSubmitted, isSubmitting, questions, answers])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Only run once when component mounts
 
   const getMessage = () => {
     if (percentage >= 85) {

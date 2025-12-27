@@ -65,14 +65,14 @@ export default function Home() {
     const newAnswers = [...answers, answerToStore]
     setAnswers(newAnswers)
 
-    // Update score if answer is correct
+    // Update score if answer is correct (use functional update to avoid stale state)
     if (answerIndex !== -1 && answerIndex === selectedQuestions[currentQuestion].correctAnswer) {
-      setCurrentScore(currentScore + 1)
+      setCurrentScore((prevScore) => prevScore + 1)
     }
 
     if (currentQuestion < selectedQuestions.length - 1) {
       setTimeout(() => {
-        setCurrentQuestion(currentQuestion + 1)
+        setCurrentQuestion((prev) => prev + 1)
       }, 2000) // Give time to see the result
     } else {
       setTimeout(() => {
