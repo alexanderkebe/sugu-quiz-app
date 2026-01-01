@@ -298,7 +298,7 @@ export async function cleanupExpiredAttempts(): Promise<number> {
     }
 
     const now = new Date().toISOString()
-    
+
     // Delete expired attempts (responses cascade automatically)
     const { data, error } = await supabase
       .from('quiz_attempts')
@@ -322,3 +322,52 @@ export async function cleanupExpiredAttempts(): Promise<number> {
   }
 }
 
+
+/**
+ * Check if the current device (session) has already completed a quiz
+ * Returns true if eligible to play (no completed attempts), false if already played
+ */
+export async function checkDeviceEligibility(): Promise<{ eligible: boolean; message?: string }> {
+  try {
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    const isValidKey = anonKey && (anonKey.length > 20 || anonKey.startsWith('sb_publishable_'))
+    if (!isValidKey) {
+      // If no DB, we can't enforce this, so allow playing (or block? safer to allow in dev)
+      return { eligible: true }
+    }
+
+    const sessionId = getSessionId()
+    if (!sessionId) {
+      // Should technically allow if we can't track? Or generate one?
+      // getSessionId returns null only if window is undefined (SSR)
+      // On client it should exist or returning null means logic error.
+      return { eligible: true }
+    }
+
+    // Check for any COMPLETED attempt by this session
+    // We only care if they successfully saved a score (completed the quiz)
+    const { count, error } = await supabase
+      .from('quiz_attempts')
+      .select('*', { count: 'exact', head: true })
+      .eq('session_id', sessionId)
+    // potentially filter by created_at to allow re-playing after X days? 
+    // For now, strict "one chance only" as requested.
+
+    if (error) {
+      console.error('Error checking device eligibility:', error)
+      return { eligible: true } // Fail open to avoid blocking valid players on error
+    }
+
+    if (count !== null && count > 0) {
+      return {
+        eligible: false,
+        message: 'This device has already been used to complete the quiz.'
+      }
+    }
+
+    return { eligible: true }
+  } catch (error) {
+    console.error('Error checking device eligibility:', error)
+    return { eligible: true }
+  }
+}

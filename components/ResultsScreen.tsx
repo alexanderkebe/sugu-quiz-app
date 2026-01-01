@@ -59,10 +59,10 @@ export default function ResultsScreen({
       // Use ref to prevent double execution in React Strict Mode
       if (hasSavedRef.current) return
       if (!playerName.trim()) return
-      
+
       hasSavedRef.current = true
       setIsSubmitting(true)
-      
+
       try {
         // Save to leaderboard
         const success = await addToLeaderboard({
@@ -71,10 +71,10 @@ export default function ResultsScreen({
           totalQuestions,
           percentage,
         })
-        
+
         // Save quiz attempt with all responses (regardless of leaderboard success)
         await saveQuizAttempt(playerName.trim(), questions, answers, score, percentage)
-        
+
         setIsSubmitting(false)
         if (success) {
           setScoreSubmitted(true)
@@ -196,25 +196,8 @@ export default function ResultsScreen({
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-          <motion.button
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-            whileHover={{ y: -3, scale: 1.02 }}
-            whileTap={{ y: -1, scale: 0.98 }}
-            onClick={onPlayAgain}
-            className="flex-1 font-nokia font-bold text-gold text-base sm:text-lg md:text-xl px-6 sm:px-8 md:px-10 py-3 sm:py-4 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 min-h-[44px] sm:min-h-[52px]"
-            style={{
-              background: 'rgba(255, 255, 255, 0.15)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
-              textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
-            }}
-          >
-            Play Again
-          </motion.button>
+
+
           <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

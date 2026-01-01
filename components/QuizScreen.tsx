@@ -117,7 +117,7 @@ export default function QuizScreen({
         />
       </div>
 
-      <div className="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 overflow-y-auto">
+      <div className="flex-1 flex flex-col items-center justify-start p-4 pt-6 sm:p-6 sm:pt-10 md:p-8 md:pt-12 overflow-y-auto">
         {/* Question Number, Score, and Timer - Mobile Stacked */}
         <div className="w-full max-w-3xl mb-4 sm:mb-6">
           {/* Mobile: Stacked layout */}
@@ -238,10 +238,10 @@ export default function QuizScreen({
                     backdropFilter: 'blur(20px)',
                     WebkitBackdropFilter: 'blur(20px)',
                     border: `1px solid ${showCorrectAnswer && isCorrect
-                        ? 'rgba(238, 193, 48, 0.5)'
-                        : showResult && isSelected && !isCorrect
-                          ? 'rgba(255, 0, 0, 0.3)'
-                          : 'rgba(255, 255, 255, 0.2)'
+                      ? 'rgba(238, 193, 48, 0.5)'
+                      : showResult && isSelected && !isCorrect
+                        ? 'rgba(255, 0, 0, 0.3)'
+                        : 'rgba(255, 255, 255, 0.2)'
                       }`,
                     boxShadow: isSelected
                       ? '0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.15)'
