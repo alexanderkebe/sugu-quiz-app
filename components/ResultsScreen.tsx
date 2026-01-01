@@ -152,7 +152,7 @@ export default function ResultsScreen({
           animate={{ opacity: 1, scale: 1 }}
           className="inline-block px-8 py-3 rounded-2xl bg-gold/30 border-2 border-gold/50 text-gold font-nokia text-xl sm:text-2xl md:text-3xl font-bold mb-6 shadow-lg shadow-gold/20"
         >
-          🔄 Attempt #{attemptNumber}
+          📍 Attempt #{attemptNumber}
         </motion.div>
 
         <motion.h1
@@ -228,7 +228,7 @@ export default function ResultsScreen({
               textShadow: '0 1px 2px rgba(255, 255, 255, 0.3)',
             }}
           >
-            🔄 Play Again
+            🎮 Play Again
           </motion.button>
 
           <motion.button
