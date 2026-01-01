@@ -27,13 +27,18 @@ export default function QuizScreen({
   const [timeLeft, setTimeLeft] = useState(60)
   const [isTimeout, setIsTimeout] = useState(false)
   const [isHintActive, setIsHintActive] = useState(false)
-  // Calculate total hints for the game: Attempt 1 = 0, Attempt 2 = 2, Attempt 3 = 4, etc.
-  const totalGameHints = Math.max(0, (attemptNumber - 1) * 2)
+  const [eliminatedAnswers, setEliminatedAnswers] = useState<number[]>([])
+  const [showGlow, setShowGlow] = useState(false)
+  // Calculate total hints for the game: Attempt 1 = 0, Attempt 2 = 2, Attempt 3 = 4, Attempt 4+ = 5
+  const totalGameHints = Math.min(5, Math.max(0, (attemptNumber - 1) * 2))
   const [hintsRemaining, setHintsRemaining] = useState(totalGameHints)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Reset timer when question changes
+  // Reset states when question changes
   useEffect(() => {
+    setEliminatedAnswers([])
+    setIsHintActive(false)
+    setShowGlow(false)
     setTimeLeft(60)
     setIsTimeout(false)
     setSelectedAnswer(null)
@@ -113,13 +118,31 @@ export default function QuizScreen({
   const handleHintClick = () => {
     if (isLocked || hintsRemaining <= 0 || isHintActive) return
 
-    // Play hint sound (using click for now as placeholder)
     soundManager.playClick()
-
     setHintsRemaining(prev => prev - 1)
     setIsHintActive(true)
 
-    // You could also play a special "sparkle" or "magical" sound if it existed
+    // Probability roll: 80% Eliminate, 20% Glow
+    const roll = Math.random()
+    if (roll < 0.8) {
+      // Eliminate wrong answers
+      const wrongAnswerIndices = question.options
+        .map((_, i) => i)
+        .filter(i => i !== question.correctAnswer && !eliminatedAnswers.includes(i))
+
+      // Scale based on attempts: 4+ attempts = eliminate 2, otherwise 1
+      const numToEliminate = attemptNumber > 4 ? 2 : 1
+      const shuffled = [...wrongAnswerIndices].sort(() => Math.random() - 0.5)
+      const toEliminate = shuffled.slice(0, numToEliminate)
+
+      setEliminatedAnswers(prev => [...prev, ...toEliminate])
+    } else {
+      // Glow correct answer once (2 seconds)
+      setShowGlow(true)
+      setTimeout(() => {
+        setShowGlow(false)
+      }, 2000)
+    }
   }
 
   const progress = (questionNumber / totalQuestions) * 100
@@ -256,40 +279,44 @@ export default function QuizScreen({
             {question.options.map((option, index) => {
               const isSelected = selectedAnswer === index
               const isCorrect = index === question.correctAnswer
+              const isEliminated = eliminatedAnswers.includes(index)
               const showResult = isLocked && (isTimeout || isSelected)
               const showCorrectAnswer = isLocked // Always show correct answer when locked
-              const isHintHighlight = isHintActive && isCorrect
+              const isHintHighlight = isHintActive && isCorrect && showGlow
 
               return (
                 <motion.button
                   key={index}
                   initial={{ opacity: 0, x: -20 }}
                   animate={isHintHighlight ? {
-                    scale: [1, 1.02, 1],
+                    scale: [1, 1.05, 1],
                     boxShadow: [
                       '0 4px 16px rgba(238, 193, 48, 0.2)',
-                      '0 4px 24px rgba(238, 193, 48, 0.4)',
+                      '0 4px 32px rgba(238, 193, 48, 0.5)',
                       '0 4px 16px rgba(238, 193, 48, 0.2)'
                     ]
-                  } : { opacity: 1, x: 0 }}
+                  } : {
+                    opacity: isEliminated ? 0 : 1,
+                    x: 0,
+                    scale: isEliminated ? 0.95 : 1
+                  }}
                   transition={isHintHighlight ? {
-                    duration: 1.5,
-                    repeat: Infinity,
+                    duration: 1.0,
+                    repeat: 2, // Glow briefly
                     ease: "easeInOut"
-                  } : { duration: 0.3, delay: index * 0.1 }}
-                  whileHover={!isLocked ? { scale: 1.02, x: 5 } : {}}
-                  whileTap={!isLocked ? { scale: 0.98 } : {}}
+                  } : { duration: 0.4, delay: index * 0.1 }}
+                  whileHover={!isLocked && !isEliminated ? { scale: 1.02, x: 5 } : {}}
+                  whileTap={!isLocked && !isEliminated ? { scale: 0.98 } : {}}
                   onClick={() => handleAnswerClick(index)}
-                  disabled={isLocked}
-                  className={`w-full text-left font-nokia transition-all duration-300 min-h-[44px] sm:min-h-[52px] ${isLocked ? 'cursor-not-allowed' : 'cursor-pointer'
-                    }`}
+                  disabled={isLocked || isEliminated}
+                  className={`w-full text-left font-nokia transition-all duration-500 min-h-[44px] sm:min-h-[52px] ${isLocked || isEliminated ? 'cursor-not-allowed' : 'cursor-pointer'
+                    } ${isEliminated ? 'pointer-events-none' : ''}`}
                   style={{
-                    opacity: isHintActive && !isCorrect && !isSelected ? 0.5 : 1,
                     background:
                       showCorrectAnswer && isCorrect
                         ? 'rgba(238, 193, 48, 0.3)'
                         : isHintHighlight
-                          ? 'rgba(238, 193, 48, 0.4)'
+                          ? 'rgba(238, 193, 48, 0.5)'
                           : showResult && isSelected && !isCorrect
                             ? 'rgba(255, 0, 0, 0.2)'
                             : isSelected
@@ -305,6 +332,7 @@ export default function QuizScreen({
                       }`,
                     borderRadius: '16px',
                     color: '#F5F5F0',
+                    visibility: isEliminated ? 'hidden' as any : 'visible' as any,
                   }}
                 >
                   <div className="flex items-center gap-2 sm:gap-3 py-3 sm:py-4 px-4 sm:px-6">
