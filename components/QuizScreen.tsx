@@ -137,11 +137,11 @@ export default function QuizScreen({
 
       setEliminatedAnswers(prev => [...prev, ...toEliminate])
     } else {
-      // Glow correct answer once (2 seconds)
+      // Glow correct answer once (1 second)
       setShowGlow(true)
       setTimeout(() => {
         setShowGlow(false)
-      }, 2000)
+      }, 1000)
     }
   }
 
@@ -293,11 +293,11 @@ export default function QuizScreen({
                   key={index}
                   initial={{ opacity: 0, x: -20 }}
                   animate={isHintHighlight ? {
-                    scale: [1, 1.05, 1],
+                    scale: [1, 1.03, 1],
                     boxShadow: [
-                      '0 4px 16px rgba(238, 193, 48, 0.2)',
-                      '0 4px 32px rgba(238, 193, 48, 0.5)',
-                      '0 4px 16px rgba(238, 193, 48, 0.2)'
+                      '0 4px 12px rgba(238, 193, 48, 0.1)',
+                      '0 4px 24px rgba(238, 193, 48, 0.3)',
+                      '0 4px 12px rgba(238, 193, 48, 0.1)'
                     ]
                   } : {
                     opacity: isEliminated ? 0 : 1,
@@ -305,8 +305,8 @@ export default function QuizScreen({
                     scale: isEliminated ? 0.95 : 1
                   }}
                   transition={isHintHighlight ? {
-                    duration: 1.0,
-                    repeat: 2, // Glow briefly
+                    duration: 0.6,
+                    repeat: 0, // Glow just once
                     ease: "easeInOut"
                   } : { duration: 0.4, delay: index * 0.1 }}
                   whileHover={!isLocked && !isEliminated ? { scale: 1.02, x: 5 } : {}}
