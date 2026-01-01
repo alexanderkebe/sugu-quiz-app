@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { getQuizAttemptsByPlayer, checkDeviceEligibility } from '@/utils/quizAttemptUtils'
 
 interface NameInputScreenProps {
-  onStart: (playerName: string) => void
+  onStart: (playerName: string, attemptCount: number) => void
 }
 
 export default function NameInputScreen({ onStart }: NameInputScreenProps) {
@@ -20,28 +20,20 @@ export default function NameInputScreen({ onStart }: NameInputScreenProps) {
     setError(null)
 
     try {
-      // Check if device (session) has already completed a quiz
-      const { eligible, message } = await checkDeviceEligibility()
+      // Fetch attempt count (and check if it's high enough to show a warning)
+      const { eligible, count, message } = await checkDeviceEligibility()
 
-      if (!eligible) {
-        setError(message || 'You have already played the quiz!')
-        setIsChecking(false)
-        return
+      // We DON'T block anymore, but we can show the message as a heads-up
+      if (!eligible && message) {
+        // Just show info, don't return
+        console.log('Multiple attempt info:', message)
       }
 
-      // No longer blocking on name - multiple people can have same name
-      // Logic for retrieving score by name still works as leaderboard shows duplicates fine
-
-      onStart(playerName.trim())
+      onStart(playerName.trim(), count)
     } catch (err) {
       console.error('Error checking player status:', err)
-      // Allow proceeding if check fails? Or block? 
-      // Safe default: let them play if check fails (connectivity issues), or block?
-      // Given the prize constraint, maybe standard error is better.
-      // But let's act robustly. If check fails, we might just let them play or show generic error.
-      // For now, show generic error.
-      setError('Unable to verify player status. Please try again.')
-      setIsChecking(false)
+      // Allow proceeding if check fails
+      onStart(playerName.trim(), 0)
     }
   }
 

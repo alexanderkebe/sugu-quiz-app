@@ -21,6 +21,7 @@ export default function Home() {
   const [currentScore, setCurrentScore] = useState(0)
   const [selectedQuestions, setSelectedQuestions] = useState<Question[]>([])
   const [playerName, setPlayerName] = useState('')
+  const [attemptNumber, setAttemptNumber] = useState(1)
   const [allQuestions, setAllQuestions] = useState<Question[]>([])
 
   // Load questions from database on mount
@@ -46,29 +47,30 @@ export default function Home() {
     setGameState('nameInput')
   }
 
-  const handleNameSubmit = async (name: string) => {
+  const handleNameSubmit = async (name: string, count: number) => {
     setPlayerName(name)
-    
+    setAttemptNumber(count + 1) // Next attempt number
+
     // Fetch fresh questions from database every time a quiz starts
     const freshQuestions = await getQuestionsFromDatabase()
     const isFromDatabase = freshQuestions.length > 0
     const questionsToUse = isFromDatabase ? freshQuestions : quizData
-    
+
     // Log the source of questions
-   /*  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-    console.log(`📚 Questions loaded from: ${isFromDatabase ? '✅ DATABASE' : '⚠️ LOCAL FALLBACK (quizData.ts)'}`)
-    console.log(`📊 Total questions available: ${questionsToUse.length}`)
-     */
+    /*  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+     console.log(`📚 Questions loaded from: ${isFromDatabase ? '✅ DATABASE' : '⚠️ LOCAL FALLBACK (quizData.ts)'}`)
+     console.log(`📊 Total questions available: ${questionsToUse.length}`)
+      */
     // Select 7 random questions
     const randomQuestions = getRandomQuizQuestions(questionsToUse)
-    
+
     // Log the selected random questions
- /*    console.log(`🎲 7 Random questions selected:`)
-    randomQuestions.forEach((q, i) => {
-      console.log(`   ${i + 1}. ${q.text.substring(0, 60)}...`)
-    })
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
-     */
+    /*    console.log(`🎲 7 Random questions selected:`)
+       randomQuestions.forEach((q, i) => {
+         console.log(`   ${i + 1}. ${q.text.substring(0, 60)}...`)
+       })
+       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+        */
     setSelectedQuestions(randomQuestions)
     setGameState('quiz')
     setCurrentQuestion(0)
@@ -100,12 +102,12 @@ export default function Home() {
 
   const handlePlayAgain = () => {
     console.log('🔄 Play Again clicked - resetting game state')
-    setGameState('splash')
+    setGameState('nameInput') // Return to name input or straight to quiz? 
+    // Usually name input is better to verify identity/attempt.
     setAnswers([])
     setCurrentQuestion(0)
     setCurrentScore(0)
     setSelectedQuestions([])
-    setPlayerName('')
   }
 
   return (
@@ -127,6 +129,7 @@ export default function Home() {
           answers={answers}
           questions={selectedQuestions}
           playerName={playerName}
+          attemptNumber={attemptNumber}
           onPlayAgain={handlePlayAgain}
           onShowLeaderboard={() => setGameState('leaderboard')}
         />
@@ -137,4 +140,3 @@ export default function Home() {
     </main>
   )
 }
-

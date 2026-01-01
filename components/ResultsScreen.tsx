@@ -11,6 +11,7 @@ interface ResultsScreenProps {
   answers: number[]
   questions: Question[]
   playerName: string
+  attemptNumber: number
   onPlayAgain: () => void
   onShowLeaderboard: () => void
 }
@@ -19,6 +20,7 @@ export default function ResultsScreen({
   answers,
   questions,
   playerName,
+  attemptNumber,
   onPlayAgain,
   onShowLeaderboard,
 }: ResultsScreenProps) {
@@ -64,15 +66,22 @@ export default function ResultsScreen({
       setIsSubmitting(true)
 
       try {
-        // Save to leaderboard
-        const success = await addToLeaderboard({
-          name: playerName.trim(),
-          score,
-          totalQuestions,
-          percentage,
-        })
+        let success = false;
+        // ONLY save to leaderboard if it's the first attempt
+        if (attemptNumber === 1) {
+          success = await addToLeaderboard({
+            name: playerName.trim(),
+            score,
+            totalQuestions,
+            percentage,
+          })
+        } else {
+          console.log(`Attempt #${attemptNumber}: Skipping leaderboard update. Only 1st attempt counts!`);
+          success = true; // Mark as "success" so we don't show an error, but we didn't update leaderboard
+        }
 
-        // Save quiz attempt with all responses (regardless of leaderboard success)
+        // ALWAYS save quiz attempt with all responses (regardless of leaderboard success)
+        // This is important so admins can see EXACTLY what was answered and on which attempt
         await saveQuizAttempt(playerName.trim(), questions, answers, score, percentage)
 
         setIsSubmitting(false)
@@ -80,13 +89,12 @@ export default function ResultsScreen({
           setScoreSubmitted(true)
         } else {
           // Show error message if save failed
-          const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+          const anonKey = (process as any).env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
           const isValidKey = anonKey && (anonKey.length > 20 || anonKey.startsWith('sb_publishable_'))
           const errorMsg = !isValidKey
-            ? 'Supabase not configured. Please add your API key to .env.local file. See GET_API_KEY.md for instructions.'
-            : 'Failed to save score. Check browser console (F12) for details. Make sure the database table exists and you ran the SQL script.'
+            ? 'Supabase not configured. Please add your API key to .env.local file.'
+            : 'Failed to save score. Check bridge.'
           console.error(errorMsg)
-          console.error('Score save failed. Check the console above for detailed error information.')
         }
       } catch (error) {
         console.error('Error saving score:', error)
@@ -139,6 +147,14 @@ export default function ResultsScreen({
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.15)',
         }}
       >
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="inline-block px-4 py-1 rounded-full bg-gold/20 border border-gold/30 text-gold font-nokia text-sm sm:text-base mb-4"
+        >
+          🔄 Attempt #{attemptNumber}
+        </motion.div>
+
         <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -181,7 +197,7 @@ export default function ResultsScreen({
             animate={{ opacity: 1 }}
             className="font-nokia text-gold text-sm sm:text-base mb-4"
           >
-            Saving your score...
+            Saving your attempt...
           </motion.p>
         )}
         {scoreSubmitted && (
@@ -190,13 +206,30 @@ export default function ResultsScreen({
             animate={{ opacity: 1 }}
             className="font-nokia text-gold text-sm sm:text-base mb-4"
           >
-            ✓ Score saved to leaderboard!
+            {attemptNumber === 1
+              ? '✓ Score saved to leaderboard!'
+              : '✓ Attempt recorded! (Only 1st attempt counts for leaderboard)'}
           </motion.p>
         )}
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.8 }}
+            whileHover={{ y: -3, scale: 1.02 }}
+            whileTap={{ y: -1, scale: 0.98 }}
+            onClick={onPlayAgain}
+            className="flex-1 font-nokia font-bold text-burgundy text-base sm:text-lg md:text-xl px-6 sm:px-8 md:px-10 py-3 sm:py-4 rounded-xl sm:rounded-2xl cursor-pointer transition-all duration-300 min-h-[44px] sm:min-h-[52px]"
+            style={{
+              background: 'linear-gradient(to bottom, #FFD700, #DAA520)',
+              boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4)',
+              textShadow: '0 1px 2px rgba(255, 255, 255, 0.3)',
+            }}
+          >
+            🔄 Play Again
+          </motion.button>
 
           <motion.button
             initial={{ opacity: 0, y: 20 }}

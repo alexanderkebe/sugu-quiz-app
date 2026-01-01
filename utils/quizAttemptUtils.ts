@@ -95,7 +95,6 @@ export async function saveQuizAttempt(
 
     if (responsesError) {
       console.error('Error saving quiz responses:', responsesError)
-      // Attempt is saved, but responses failed - still return attempt ID
     }
 
     return attemptId
@@ -106,11 +105,36 @@ export async function saveQuizAttempt(
 }
 
 /**
+ * Get the number of attempts already made by this device
+ */
+export async function getDeviceAttemptCount(): Promise<number> {
+  try {
+    const sessionId = getSessionId()
+    if (!sessionId) return 0
+
+    const { count, error } = await supabase
+      .from('quiz_attempts')
+      .select('*', { count: 'exact', head: true })
+      .eq('session_id', sessionId)
+
+    if (error) {
+      console.error('Error fetching attempt count:', error)
+      return 0
+    }
+
+    return count || 0
+  } catch (error) {
+    console.error('Error fetching attempt count:', error)
+    return 0
+  }
+}
+
+/**
  * Get all quiz attempts with responses
  */
 export async function getAllQuizAttempts(): Promise<QuizAttemptWithResponses[]> {
   try {
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    const anonKey = (process as any).env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
     const isValidKey = anonKey && (anonKey.length > 20 || anonKey.startsWith('sb_publishable_'))
     if (!isValidKey) {
       console.warn('❌ Supabase not configured.')
@@ -134,7 +158,7 @@ export async function getAllQuizAttempts(): Promise<QuizAttemptWithResponses[]> 
     }
 
     // Fetch all responses
-    const attemptIds = attempts.map((a) => a.id)
+    const attemptIds = attempts.map((a: any) => a.id)
     const { data: responses, error: responsesError } = await supabase
       .from('quiz_attempt_responses')
       .select('*')
@@ -148,7 +172,7 @@ export async function getAllQuizAttempts(): Promise<QuizAttemptWithResponses[]> 
     // Group responses by attempt_id
     const responsesByAttempt = new Map<number, QuizAttemptResponse[]>()
     if (responses) {
-      responses.forEach((response) => {
+      responses.forEach((response: any) => {
         const attemptId = response.attempt_id
         if (!responsesByAttempt.has(attemptId)) {
           responsesByAttempt.set(attemptId, [])
@@ -168,15 +192,15 @@ export async function getAllQuizAttempts(): Promise<QuizAttemptWithResponses[]> 
     }
 
     // Combine attempts with responses
-    return attempts.map((attempt) => ({
+    return attempts.map((attempt: any) => ({
       id: attempt.id,
       playerName: attempt.player_name,
       sessionId: attempt.session_id || undefined,
       score: attempt.score,
       totalQuestions: attempt.total_questions,
       percentage: attempt.percentage,
-      createdAt: attempt.created_at ? new Date(attempt.created_at) : undefined,
-      expiresAt: attempt.expires_at ? new Date(attempt.expires_at) : undefined,
+      createdAt: attempt.created_at ? new Date(attempt.createdAt) : undefined,
+      expiresAt: attempt.expiresAt ? new Date(attempt.expiresAt) : undefined,
       responses: responsesByAttempt.get(attempt.id) || [],
     }))
   } catch (error) {
@@ -324,51 +348,28 @@ export async function cleanupExpiredAttempts(): Promise<number> {
 
 
 /**
- * Check if the current device (session) has already completed a quiz
- * Returns true if eligible to play (no completed attempts), false if already played
+ * Check if the current device (session) is eligible for a PRIZE (first attempt only)
  */
-export async function checkDeviceEligibility(): Promise<{ eligible: boolean; message?: string }> {
+export async function checkDeviceEligibility(): Promise<{ eligible: boolean; count: number; message?: string }> {
   try {
-    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
-    const isValidKey = anonKey && (anonKey.length > 20 || anonKey.startsWith('sb_publishable_'))
-    if (!isValidKey) {
-      // If no DB, we can't enforce this, so allow playing (or block? safer to allow in dev)
-      return { eligible: true }
-    }
+    const count = await getDeviceAttemptCount()
 
     // Check for admin override via localStorage
     if (typeof window !== 'undefined' && localStorage.getItem('sugu_admin_mode') === 'true') {
-      return { eligible: true }
+      return { eligible: true, count }
     }
 
-    const sessionId = getSessionId()
-    if (!sessionId) {
-      return { eligible: true }
-    }
-
-    // Check for any COMPLETED attempt by this session
-    const { count, error } = await supabase
-      .from('quiz_attempts')
-      .select('*', { count: 'exact', head: true })
-      .eq('session_id', sessionId)
-    // potentially filter by created_at to allow re-playing after X days? 
-    // For now, strict "one chance only" as requested.
-
-    if (error) {
-      console.error('Error checking device eligibility:', error)
-      return { eligible: true } // Fail open to avoid blocking valid players on error
-    }
-
-    if (count !== null && count > 0) {
+    if (count > 0) {
       return {
         eligible: false,
-        message: 'This device has already been used to complete the quiz.'
+        count,
+        message: 'This device has already completed the quiz once. You can play again, but only your first score qualifies for the leaderboard rewards!'
       }
     }
 
-    return { eligible: true }
+    return { eligible: true, count }
   } catch (error) {
     console.error('Error checking device eligibility:', error)
-    return { eligible: true }
+    return { eligible: true, count: 0 }
   }
 }
