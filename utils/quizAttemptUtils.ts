@@ -336,16 +336,17 @@ export async function checkDeviceEligibility(): Promise<{ eligible: boolean; mes
       return { eligible: true }
     }
 
+    // Check for admin override via localStorage
+    if (typeof window !== 'undefined' && localStorage.getItem('sugu_admin_mode') === 'true') {
+      return { eligible: true }
+    }
+
     const sessionId = getSessionId()
     if (!sessionId) {
-      // Should technically allow if we can't track? Or generate one?
-      // getSessionId returns null only if window is undefined (SSR)
-      // On client it should exist or returning null means logic error.
       return { eligible: true }
     }
 
     // Check for any COMPLETED attempt by this session
-    // We only care if they successfully saved a score (completed the quiz)
     const { count, error } = await supabase
       .from('quiz_attempts')
       .select('*', { count: 'exact', head: true })

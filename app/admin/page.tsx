@@ -17,10 +17,13 @@ export default function AdminDashboard() {
     averageScore: 0,
   })
   const [isLoading, setIsLoading] = useState(true)
+  const [isAdminMode, setIsAdminMode] = useState(false)
 
   useEffect(() => {
     // Enable scrolling on admin pages
     document.body.classList.add('admin-page')
+    const mode = localStorage.getItem('sugu_admin_mode') === 'true'
+    setIsAdminMode(mode)
     return () => {
       document.body.classList.remove('admin-page')
     }
@@ -59,6 +62,12 @@ export default function AdminDashboard() {
     }
   }
 
+  const toggleAdminMode = () => {
+    const newMode = !isAdminMode
+    setIsAdminMode(newMode)
+    localStorage.setItem('sugu_admin_mode', newMode ? 'true' : 'false')
+  }
+
   const dashboardCards = [
     {
       title: '📊 Leaderboard',
@@ -80,7 +89,7 @@ export default function AdminDashboard() {
     },
     {
       title: '📈 Quiz Attempts',
-      description: 'View detailed quiz attempts and responses',
+      description: 'View attempts and "unblock" users by deleting entries',
       href: '/admin/attempts',
       icon: '📋',
       stat: stats.totalAttempts,
@@ -107,9 +116,15 @@ export default function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
           className="mb-8 sm:mb-12"
         >
-          <h1 className="font-nokia font-bold text-gold text-4xl sm:text-5xl md:text-6xl mb-4 text-center">
-            🛡️ Admin Dashboard
-          </h1>
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
+            <Link href="/" className="font-nokia text-gold hover:text-gold/80 text-lg order-2 sm:order-1">
+              ← Back to Game
+            </Link>
+            <h1 className="font-nokia font-bold text-gold text-4xl sm:text-5xl md:text-6xl text-center order-1 sm:order-2 flex-1">
+              🛡️ Admin Dashboard
+            </h1>
+            <div className="w-24 order-3 hidden sm:block"></div>
+          </div>
           <p className="font-nokia text-off-white text-center text-base sm:text-lg md:text-xl">
             Manage your quiz application
           </p>
@@ -224,10 +239,23 @@ export default function AdminDashboard() {
           <h3 className="font-nokia font-bold text-gold text-xl sm:text-2xl mb-4">Quick Actions</h3>
           <div className="flex flex-col sm:flex-row gap-3">
             <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={toggleAdminMode}
+              className={`flex-1 font-nokia font-bold text-base sm:text-lg px-6 py-3 rounded-xl cursor-pointer min-h-[44px] transition-all ${isAdminMode ? 'bg-gold text-burgundy shadow-lg shadow-gold/20' : 'bg-white/10 text-gold hover:bg-white/15'
+                }`}
+              style={{
+                backdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}
+            >
+              {isAdminMode ? '⚡ Admin Mode: ON (Unlimited Plays)' : '🔒 Admin Mode: OFF'}
+            </motion.button>
+            <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               onClick={loadStats}
-              className="font-nokia font-bold text-gold text-base sm:text-lg px-6 py-3 rounded-xl cursor-pointer min-h-[44px]"
+              className="flex-1 font-nokia font-bold text-gold text-base sm:text-lg px-6 py-3 rounded-xl cursor-pointer min-h-[44px]"
               style={{
                 background: 'rgba(255, 255, 255, 0.15)',
                 backdropFilter: 'blur(20px)',
@@ -240,6 +268,7 @@ export default function AdminDashboard() {
         </motion.div>
       </div>
     </div>
+
   )
 }
 
