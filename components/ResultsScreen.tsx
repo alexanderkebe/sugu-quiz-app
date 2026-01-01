@@ -148,9 +148,9 @@ export default function ResultsScreen({
         }}
       >
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="inline-block px-4 py-1 rounded-full bg-gold/20 border border-gold/30 text-gold font-nokia text-sm sm:text-base mb-4"
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="inline-block px-8 py-3 rounded-2xl bg-gold/30 border-2 border-gold/50 text-gold font-nokia text-xl sm:text-2xl md:text-3xl font-bold mb-6 shadow-lg shadow-gold/20"
         >
           🔄 Attempt #{attemptNumber}
         </motion.div>
