@@ -160,74 +160,78 @@ export default function QuizScreen({
       </div>
 
       <div className="flex-1 flex flex-col items-center justify-start p-4 pt-6 sm:p-6 sm:pt-10 md:p-8 md:pt-12 overflow-y-auto">
-        {/* Header Section */}
-        <div className="w-full max-w-3xl mb-4 sm:mb-6">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-            {/* Attempt Counter & Question Progress */}
-            <div className="flex flex-col items-center sm:items-start">
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="font-nokia font-bold text-gold/80 text-xs sm:text-sm uppercase tracking-wider mb-1"
-              >
-                📍 Attempt #{attemptNumber}
-              </motion.div>
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="font-nokia text-gold text-sm sm:text-base md:text-lg"
-              >
-                Question {questionNumber} of {totalQuestions}
-              </motion.div>
+        {/* Header Section - Reorganized Two-Row Layout */}
+        <div className="w-full max-w-3xl mb-6 sm:mb-8 bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-md">
+          {/* Top Row: Meta Info */}
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-white/10">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="flex items-center gap-2"
+            >
+              <span className="text-xl">📍</span>
+              <span className="font-nokia font-bold text-gold/90 text-sm sm:text-base uppercase tracking-wider">
+                Attempt #{attemptNumber}
+              </span>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="font-nokia text-gold/80 text-sm sm:text-base font-medium"
+            >
+              Question {questionNumber} / {totalQuestions}
+            </motion.div>
+          </div>
+
+          {/* Bottom Row: Game Controls & Stats */}
+          <div className="flex items-center justify-between gap-2">
+            {/* Score */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="px-3 py-2 rounded-xl bg-white/10 border border-white/20 text-gold flex items-center gap-2"
+            >
+              <span className="text-lg">🎯</span>
+              <span className="font-nokia font-bold text-sm sm:text-base">
+                {currentScore}/{questionNumber - 1 || 0}
+              </span>
+            </motion.div>
+
+            {/* Timer - Centered */}
+            <motion.div
+              key={timeLeft}
+              initial={{ scale: 1.1 }}
+              animate={{ scale: 1 }}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 border border-white/20 min-w-[80px] justify-center ${timeLeft <= 10 ? 'text-red-400 border-red-400/30' : 'text-gold'
+                }`}
+            >
+              <span className="text-lg">⏱️</span>
+              <span className="font-nokia font-bold text-lg sm:text-xl">
+                {timeLeft}
+              </span>
+            </motion.div>
+
+            {/* Hint Button */}
+            <div className="w-[100px] sm:w-[120px] flex justify-end">
+              {attemptNumber > 1 && (
+                <motion.button
+                  whileHover={!isLocked && hintsRemaining > 0 ? { scale: 1.05 } : {}}
+                  whileTap={!isLocked && hintsRemaining > 0 ? { scale: 0.95 } : {}}
+                  onClick={handleHintClick}
+                  disabled={isLocked || hintsRemaining <= 0 || isHintActive}
+                  className={`px-3 py-2 rounded-xl font-nokia font-bold flex items-center gap-2 transition-all ${isHintActive ? 'bg-gold text-burgundy' : 'bg-gold/20 text-gold border border-gold/30 hover:bg-gold/30'
+                    }`}
+                  style={{ opacity: hintsRemaining <= 0 ? 0.4 : 1 }}
+                >
+                  <span className="text-base">💡</span>
+                  <span className="text-xs sm:text-sm">Hint</span>
+                  <span className="bg-black/20 px-1.5 py-0.5 rounded text-[10px] min-w-[18px]">
+                    {hintsRemaining}
+                  </span>
+                </motion.button>
+              )}
             </div>
-
-            {/* Middle: Score & Timer */}
-            <div className="flex items-center gap-3">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="font-nokia font-bold text-sm sm:text-base md:text-lg px-3 py-1.5 rounded-lg text-gold whitespace-nowrap"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                }}
-              >
-                🎯 {currentScore}/{questionNumber - 1 || 0}
-              </motion.div>
-
-              <motion.div
-                key={timeLeft}
-                initial={{ scale: 1.1 }}
-                animate={{ scale: 1 }}
-                className={`font-nokia font-bold text-lg sm:text-xl md:text-2xl px-3 py-1.5 rounded-lg w-20 text-center ${timeLeft <= 10 ? 'text-red-400' : 'text-gold'}`}
-                style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                }}
-              >
-                ⏱️ {timeLeft}
-              </motion.div>
-            </div>
-
-            {/* Right: Hint Button */}
-            {attemptNumber > 1 && (
-              <motion.button
-                whileHover={!isLocked && hintsRemaining > 0 ? { scale: 1.05 } : {}}
-                whileTap={!isLocked && hintsRemaining > 0 ? { scale: 0.95 } : {}}
-                onClick={handleHintClick}
-                disabled={isLocked || hintsRemaining <= 0 || isHintActive}
-                className={`px-4 py-2 rounded-xl font-nokia font-bold flex items-center gap-2 transition-all ${isHintActive ? 'bg-gold text-burgundy' : 'bg-white/10 text-gold hover:bg-white/20'}`}
-                style={{
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  opacity: hintsRemaining <= 0 ? 0.5 : 1
-                }}
-              >
-                <span>💡 Hint</span>
-                <span className="bg-black/20 px-2 py-0.5 rounded-lg text-xs">{hintsRemaining}</span>
-              </motion.button>
-            )}
           </div>
         </div>
 
