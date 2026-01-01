@@ -122,6 +122,7 @@ export default function Home() {
           totalQuestions={selectedQuestions.length}
           onAnswerSelect={handleAnswerSelect}
           currentScore={currentScore}
+          attemptNumber={attemptNumber}
         />
       )}
       {gameState === 'results' && (
